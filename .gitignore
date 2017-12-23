@@ -1,0 +1,12 @@
+# PatformIO
+.pioenvs
+.piolibdeps
+.clang_complete
+.gcc-flags.json
+
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
+
+src/config.h
