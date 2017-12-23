@@ -24,11 +24,4 @@
  * SOFTWARE.
  */
 
-#include "webSocketServer.h"
-#include "temperatureChecker.h"
-
-void app_main(void)
-{
-    startWebSocketServer(1);
-    startCheckingTemperatures(1);
-}
+void startWebSocketServer(int priority);

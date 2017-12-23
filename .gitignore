@@ -9,4 +9,4 @@
 .AppleDouble
 .LSOverride
 
-src/config.h
+src/config/config.h
