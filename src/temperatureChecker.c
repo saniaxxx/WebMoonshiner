@@ -37,6 +37,9 @@
 #include "config/config.h"
 #include "temperatureChecker.h"
 
+//reference to the WX queue
+extern QueueHandle_t Temperatures_queue;
+
 void checkingTemperaturesTask(void* pvParameters)
 {
     esp_log_level_set("*", ESP_LOG_INFO);
@@ -100,7 +103,6 @@ void checkingTemperaturesTask(void* pvParameters)
 
     // Read temperatures more efficiently by starting conversions on all devices at the same time
     int crc_errors[DS18B20_DEVICES_QUANTITY] = { 0 };
-    int sample_count = 0;
     if (num_devices > 0) {
         while (1) {
             TickType_t start_ticks = xTaskGetTickCount();
@@ -118,14 +120,16 @@ void checkingTemperaturesTask(void* pvParameters)
                 temps[i] = ds18b20_read_temp(devices[i]);
             }
 
-            // Print results in a separate loop, after all have been read
-            printf("\nTemperature readings (degrees C): sample %d\n", ++sample_count);
+            // Send results in a separate loop, after all have been read
             for (int i = 0; i < num_devices; ++i) {
                 if (temps[i] == DS18B20_INVALID_READING) {
                     ++crc_errors[i];
                 }
-
-                printf("  %d: %.1f    %d errors\n", i, temps[i], crc_errors[i]);
+                Temperature_info temp_data;
+                temp_data.device_index = i;
+                asprintf(&temp_data.temperature, "%.1f", temps[i]);
+                printf("Sending temperature to queue: %s\n", temp_data.temperature);
+                xQueueSendToFront(Temperatures_queue, &temp_data, 0);
             }
 
             // Make up periodic delay to approximately one sample period per measurement
@@ -141,5 +145,5 @@ void checkingTemperaturesTask(void* pvParameters)
 
 void startCheckingTemperatures(int priority)
 {
-    xTaskCreate(&checkingTemperaturesTask, "dallas_checking", 2048, NULL, priority, NULL);
+    xTaskCreate(&checkingTemperaturesTask, "dallas_checking", STACK_SIZE, NULL, priority, NULL);
 }

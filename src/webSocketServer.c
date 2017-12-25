@@ -31,22 +31,20 @@
 #include "esp_event.h"
 #include "esp_event_loop.h"
 #include "nvs_flash.h"
-#include "WebSocket_Task.h"
 #include "config/config.h"
 #include "webSocketServer.h"
 
 // WebSocket frame receive queue
-QueueHandle_t WebSocket_rx_queue;
+extern QueueHandle_t WebSocket_rx_queue;
+// WebSocket frame send queue
+extern QueueHandle_t WebSocket_wx_queue;
 
-void task_process_WebSocket(void* pvParameters)
+void web_socket_read_task(void* pvParameters)
 {
     (void)pvParameters;
 
     // frame buffer
     WebSocket_frame_t __RX_frame;
-
-    // create WebSocket RX Queue
-    WebSocket_rx_queue = xQueueCreate(10, sizeof(WebSocket_frame_t));
 
     while (1) {
         // receive next WebSocket frame from queue
@@ -54,16 +52,46 @@ void task_process_WebSocket(void* pvParameters)
                 3 * portTICK_PERIOD_MS)
             == pdTRUE) {
             // write frame inforamtion to UART
-            printf("New Websocket frame. Length %d, payload %.*s \r\n",
+            printf("Received new frame from Websocket. Length %d, payload %.*s \r\n",
                 __RX_frame.payload_length, __RX_frame.payload_length,
                 __RX_frame.payload);
-
-            // loop back frame
-            WS_write_data(__RX_frame.payload, __RX_frame.payload_length);
 
             // free memory
             if (__RX_frame.payload != NULL)
                 free(__RX_frame.payload);
+        }
+    }
+    vTaskDelete( NULL );
+}
+
+void web_socket_write_task(void* pvParameters)
+{
+    (void)pvParameters;
+
+    // buffer
+    char* payload;
+
+    while (1) {
+        // receive string from queue
+        if (xQueueReceive(WebSocket_wx_queue, &payload,
+                3 * portTICK_PERIOD_MS)
+            == pdTRUE) {
+
+            // get size
+            size_t payload_length = sizeof(payload)/sizeof(*payload);
+
+            // write inforamtion to UART
+            printf("Sending frame to Websocket . Length %d, payload %.*s \r\n",
+                payload_length, payload_length,
+                payload);
+
+            // send
+            WS_write_data(payload, payload_length);
+
+            // free memory
+            if (payload != NULL){
+              free(payload);
+            }
         }
     }
     vTaskDelete( NULL );
@@ -88,8 +116,11 @@ void startWebSocketServer(int priority)
     ESP_ERROR_CHECK(esp_wifi_connect());
 
     // create WebSocker receive task
-    xTaskCreate(&task_process_WebSocket, "ws_process_rx", 2048, NULL, priority, NULL);
+    xTaskCreate(&web_socket_read_task, "ws_process_rx", STACK_SIZE, NULL, priority, NULL);
+
+    // create WebSocker send task
+    xTaskCreate(&web_socket_write_task, "ws_process_wx", STACK_SIZE, NULL, priority, NULL);
 
     // Create Websocket Server Task
-    xTaskCreate(&ws_server, "ws_server", 2048, NULL, priority, NULL);
+    xTaskCreate(&ws_server, "ws_server", STACK_SIZE, NULL, priority, NULL);
 }
