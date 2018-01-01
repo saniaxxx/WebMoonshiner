@@ -24,16 +24,41 @@
  * SOFTWARE.
  */
 
-
-#include "webSocketServer.h"
-#include "temperatureChecker.h"
-#include "dispatcher.h"
+#include <stdio.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "driver/gpio.h"
+#include "sdkconfig.h"
+#include "config/config.h"
 #include "valveController.h"
 
-void app_main(void)
+static unsigned int valve_pwm_percents = 5;
+
+void blink_task(void *pvParameter)
 {
-    startDispatcherTask(1);
-    startWebSocketServer(0);
-    startCheckingTemperatures(0);
-    startValveController(0);
+    gpio_pad_select_gpio(VALVE_GPIO_PIN);
+    /* Set the GPIO as a push/pull output */
+    gpio_set_direction(VALVE_GPIO_PIN, GPIO_MODE_OUTPUT);
+    while(1) {
+        float high_output_period = 1000 * VALVE_CYCLE_PERIOD * valve_pwm_percents / 100;
+        float low_output_period = 1000 * VALVE_CYCLE_PERIOD - high_output_period;
+        /* Set valve off (output low) */
+        gpio_set_level(VALVE_GPIO_PIN, 0);
+        vTaskDelay(low_output_period / portTICK_PERIOD_MS);
+        /* Set valve on (output high) */
+        gpio_set_level(VALVE_GPIO_PIN, 1);
+        vTaskDelay(high_output_period / portTICK_PERIOD_MS);
+    }
+}
+
+void setValvePWM(unsigned int percents) {
+  valve_pwm_percents = percents;
+}
+
+unsigned int getValvePWM() {
+  return valve_pwm_percents;
+}
+
+void startValveController(int priority){
+    xTaskCreate(&blink_task, "blink_task", STACK_SIZE, NULL, priority, NULL);
 }

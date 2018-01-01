@@ -24,16 +24,6 @@
  * SOFTWARE.
  */
 
-
-#include "webSocketServer.h"
-#include "temperatureChecker.h"
-#include "dispatcher.h"
-#include "valveController.h"
-
-void app_main(void)
-{
-    startDispatcherTask(1);
-    startWebSocketServer(0);
-    startCheckingTemperatures(0);
-    startValveController(0);
-}
+void startValveController(int priority);
+unsigned int getValvePWM();
+void setValvePWM(unsigned int percents);
