@@ -33,11 +33,8 @@
 #include "nvs_flash.h"
 #include "config/config.h"
 #include "webSocketServer.h"
+#include "customQueues.h"
 
-// WebSocket frame receive queue
-extern QueueHandle_t WebSocket_rx_queue;
-// WebSocket frame send queue
-extern QueueHandle_t WebSocket_wx_queue;
 
 void web_socket_read_task(void* pvParameters)
 {

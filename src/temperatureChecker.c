@@ -25,20 +25,17 @@
  */
 
 #include <inttypes.h>
-
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_system.h"
 #include "esp_log.h"
-
 #include "owb.h"
 #include "owb_rmt.h"
 #include "ds18b20.h"
 #include "config/config.h"
 #include "temperatureChecker.h"
+#include "customQueues.h"
 
-//reference to the WX queue
-extern QueueHandle_t Temperatures_queue;
 
 void checkingTemperaturesTask(void* pvParameters)
 {

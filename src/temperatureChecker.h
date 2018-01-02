@@ -24,9 +24,4 @@
  * SOFTWARE.
  */
 
- typedef struct {
-     unsigned int device_index;
-     char* temperature;
- } Temperature_info;
-
- void startCheckingTemperatures(int priority);
+void startCheckingTemperatures(int priority);

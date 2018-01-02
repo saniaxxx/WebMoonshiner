@@ -22,20 +22,23 @@
  * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- */
+*/
 
+typedef struct {
+  unsigned int duration;
+  unsigned int pause;
+} Sound_info;
 
-#include "webSocketServer.h"
-#include "temperatureChecker.h"
-#include "dispatcher.h"
-#include "valveController.h"
-#include "buzzerController.h"
+typedef struct {
+  unsigned int device_index;
+  char* temperature;
+} Temperature_info;
 
-void app_main(void)
-{
-    startDispatcherTask(1);
-    startWebSocketServer(0);
-    startCheckingTemperatures(0);
-    startValveController(0);
-    startBuzzerController(0);
-}
+// WebSocket frame receive queue
+QueueHandle_t WebSocket_rx_queue;
+// WebSocket frame send queue
+QueueHandle_t WebSocket_wx_queue;
+// Temperatures data queue
+QueueHandle_t Temperatures_queue;
+// Sound queue
+QueueHandle_t Sound_queue;

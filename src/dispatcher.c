@@ -26,32 +26,25 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "temperatureChecker.h"
-#include "webSocketServer.h"
 #include "config/config.h"
-
-
-// WebSocket frame receive queue
-QueueHandle_t WebSocket_rx_queue;
-// WebSocket frame send queue
-QueueHandle_t WebSocket_wx_queue;
-// Temperatures data queue
-QueueHandle_t Temperatures_queue;
+#include "customQueues.h"
+#include "WebSocket_Task.h"
 
 void dispatcherTask( void *pvParametres) {
-    // create WebSocket RX Queue
+    // create queues
     WebSocket_rx_queue = xQueueCreate(10, sizeof(WebSocket_frame_t));
-    // create WebSocket WX Queue
     WebSocket_wx_queue = xQueueCreate(10, sizeof(char*));
-    // create queue for temperatures data
     Temperatures_queue = xQueueCreate(3, sizeof(Temperature_info));
+    Sound_queue = xQueueCreate(10, sizeof(Sound_info));
 
     for( ;; ) {
       Temperature_info tempinfo;
       if (xQueueReceive(Temperatures_queue, &tempinfo, 0) == pdTRUE)
       {
-            xQueueSendToFront(WebSocket_wx_queue, &tempinfo.temperature, 0);
+            xQueueSend(WebSocket_wx_queue, &tempinfo.temperature, 0);
       }
+      Sound_info soundInfo = {.duration = 100, .pause = 5000};
+      xQueueSend(Sound_queue, &soundInfo, 0);
       vTaskDelay(1000 / portTICK_PERIOD_MS );
     }
 

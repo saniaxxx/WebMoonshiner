@@ -22,20 +22,6 @@
  * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- */
+*/
 
-
-#include "webSocketServer.h"
-#include "temperatureChecker.h"
-#include "dispatcher.h"
-#include "valveController.h"
-#include "buzzerController.h"
-
-void app_main(void)
-{
-    startDispatcherTask(1);
-    startWebSocketServer(0);
-    startCheckingTemperatures(0);
-    startValveController(0);
-    startBuzzerController(0);
-}
+void startBuzzerController(unsigned int priority);
