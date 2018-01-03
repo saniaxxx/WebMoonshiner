@@ -24,6 +24,4 @@
  * SOFTWARE.
 */
 
-#include "WebSocket_Task.h"
-
-void startWebSocketServer(int priority);
+void testOfHardware();

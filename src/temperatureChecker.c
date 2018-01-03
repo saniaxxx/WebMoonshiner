@@ -22,7 +22,7 @@
  * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- */
+*/
 
 #include <inttypes.h>
 #include "freertos/FreeRTOS.h"
@@ -34,7 +34,7 @@
 #include "ds18b20.h"
 #include "config/config.h"
 #include "temperatureChecker.h"
-#include "customQueues.h"
+#include "publicQueues.h"
 
 
 void checkingTemperaturesTask(void* pvParameters)

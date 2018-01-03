@@ -22,7 +22,7 @@
  * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- */
+*/
 
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
@@ -32,7 +32,7 @@
 #include "config/config.h"
 #include "valveController.h"
 
-static unsigned int valve_pwm_percents = 5;
+static unsigned int valve_pwm_percents = 0;
 
 void blink_task(void *pvParameter)
 {
@@ -40,14 +40,14 @@ void blink_task(void *pvParameter)
     /* Set the GPIO as a push/pull output */
     gpio_set_direction(VALVE_GPIO_PIN, GPIO_MODE_OUTPUT);
     while(1) {
-        float high_output_period = 1000 * VALVE_CYCLE_PERIOD * valve_pwm_percents / 100;
-        float low_output_period = 1000 * VALVE_CYCLE_PERIOD - high_output_period;
-        /* Set valve off (output low) */
-        gpio_set_level(VALVE_GPIO_PIN, 0);
-        vTaskDelay(low_output_period / portTICK_PERIOD_MS);
-        /* Set valve on (output high) */
-        gpio_set_level(VALVE_GPIO_PIN, 1);
-        vTaskDelay(high_output_period / portTICK_PERIOD_MS);
+      float high_output_period = 1000 * VALVE_CYCLE_PERIOD * valve_pwm_percents / 100;
+      float low_output_period = 1000 * VALVE_CYCLE_PERIOD - high_output_period;
+      /* Set valve off (output low) */
+      gpio_set_level(VALVE_GPIO_PIN, 0);
+      vTaskDelay(low_output_period / portTICK_PERIOD_MS);
+      /* Set valve on (output high) */
+      gpio_set_level(VALVE_GPIO_PIN, valve_pwm_percents?1:0);
+      vTaskDelay(high_output_period / portTICK_PERIOD_MS);
     }
 }
 

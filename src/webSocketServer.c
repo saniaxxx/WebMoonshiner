@@ -22,7 +22,7 @@
  * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- */
+*/
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -33,8 +33,12 @@
 #include "nvs_flash.h"
 #include "config/config.h"
 #include "webSocketServer.h"
-#include "customQueues.h"
+#include "publicQueues.h"
+#include "cJSON.h"
+#include <string.h>
 
+//WebSocket frame receive queue
+QueueHandle_t WebSocket_rx_queue;
 
 void web_socket_read_task(void* pvParameters)
 {
@@ -43,16 +47,19 @@ void web_socket_read_task(void* pvParameters)
     // frame buffer
     WebSocket_frame_t __RX_frame;
 
+    //create WebSocket RX Queue
+    WebSocket_rx_queue = xQueueCreate(10,sizeof(WebSocket_frame_t));
+
     while (1) {
         // receive next WebSocket frame from queue
-        if (xQueueReceive(WebSocket_rx_queue, &__RX_frame,
-                3 * portTICK_PERIOD_MS)
-            == pdTRUE) {
+        if (xQueueReceive(WebSocket_rx_queue, &__RX_frame, 0) == pdTRUE) {
             // write frame inforamtion to UART
             printf("Received new frame from Websocket. Length %d, payload %.*s \r\n",
                 __RX_frame.payload_length, __RX_frame.payload_length,
                 __RX_frame.payload);
 
+            cJSON *root = cJSON_Parse(__RX_frame.payload);
+            xQueueSend (Json_incoming_queue, &root , 0 );
             // free memory
             if (__RX_frame.payload != NULL)
                 free(__RX_frame.payload);
@@ -66,29 +73,30 @@ void web_socket_write_task(void* pvParameters)
     (void)pvParameters;
 
     // buffer
-    char* payload;
+    cJSON *json = NULL;
 
     while (1) {
         // receive string from queue
-        if (xQueueReceive(WebSocket_wx_queue, &payload,
-                3 * portTICK_PERIOD_MS)
-            == pdTRUE) {
+        if (xQueueReceive(Json_outgoing_queue, &json, 0) == pdTRUE) {
+          // stringify json
+          char *payload = cJSON_Print(json);
 
-            // get size
-            size_t payload_length = sizeof(payload)/sizeof(*payload);
+          // get size
+          size_t payload_length = strlen(payload);
 
-            // write inforamtion to UART
-            printf("Sending frame to Websocket . Length %d, payload %.*s \r\n",
-                payload_length, payload_length,
-                payload);
+          // write inforamtion to UART
+          printf("Sending frame to Websocket . Length %d, payload %.*s \r\n",
+              payload_length, payload_length,
+              payload);
 
-            // send
-            WS_write_data(payload, payload_length);
+          // send
+          err_t error = WS_write_data(payload, payload_length);
+          if (error) {
+            printf("Error sending frame to Websocket, code = %d \r\n", error);
+          }
 
-            // free memory
-            if (payload != NULL){
-              free(payload);
-            }
+          //free memory
+          cJSON_Delete(json);
         }
     }
     vTaskDelete( NULL );

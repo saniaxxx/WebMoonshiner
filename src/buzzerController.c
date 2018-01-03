@@ -22,7 +22,7 @@
  * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- */
+*/
 
 #include <stdio.h>
 #include <string.h>
@@ -38,7 +38,7 @@
 #include "sdkconfig.h"
 #include "buzzerController.h"
 #include "config/config.h"
-#include "customQueues.h"
+#include "publicQueues.h"
 
 #define GPIO_OUTPUT 32
 #define GPIO_OUTPUT_SPEED LEDC_HIGH_SPEED_MODE

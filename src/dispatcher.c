@@ -22,29 +22,28 @@
  * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- */
+*/
 
+#include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "config/config.h"
-#include "customQueues.h"
-#include "WebSocket_Task.h"
+#include "publicQueues.h"
+#include "operationModes.h"
+#include "cJSON.h"
 
 void dispatcherTask( void *pvParametres) {
     // create queues
-    WebSocket_rx_queue = xQueueCreate(10, sizeof(WebSocket_frame_t));
-    WebSocket_wx_queue = xQueueCreate(10, sizeof(char*));
+    Json_outgoing_queue = xQueueCreate(10, sizeof(cJSON*));
+    Json_incoming_queue = xQueueCreate(10, sizeof(cJSON*));
     Temperatures_queue = xQueueCreate(3, sizeof(Temperature_info));
     Sound_queue = xQueueCreate(10, sizeof(Sound_info));
 
     for( ;; ) {
-      Temperature_info tempinfo;
-      if (xQueueReceive(Temperatures_queue, &tempinfo, 0) == pdTRUE)
-      {
-            xQueueSend(WebSocket_wx_queue, &tempinfo.temperature, 0);
+      cJSON *root = NULL;
+      if (xQueueReceive(Json_incoming_queue, &root, 0) == pdTRUE) {
+          xQueueSend (Json_outgoing_queue, &root , 0 );
       }
-      Sound_info soundInfo = {.duration = 100, .pause = 5000};
-      xQueueSend(Sound_queue, &soundInfo, 0);
       vTaskDelay(1000 / portTICK_PERIOD_MS );
     }
 

@@ -24,6 +24,23 @@
  * SOFTWARE.
 */
 
-#include "WebSocket_Task.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "config/config.h"
+#include "publicQueues.h"
+#include "operationModes.h"
 
-void startWebSocketServer(int priority);
+void testOfHardware(){
+  //test sound
+  Sound_info soundInfo = {.duration = 100, .pause = 0};
+  xQueueSend(Sound_queue, &soundInfo, 0);
+
+  //test ds18b20 devices
+  portBASE_TYPE xStatus;
+  Temperature_info tempinfo;
+  xStatus = xQueueReceive(Temperatures_queue, &tempinfo, 0);
+  if (xStatus == pdTRUE)
+  {
+        xQueueSend(Json_outgoing_queue, &tempinfo.temperature, 0);
+  }
+}

@@ -25,7 +25,7 @@
 			$('#WebSocket_State').text("Connecting");
 			
 			WebSocket_connection.onopen = function(){
-			  $('#WebSocket_State').html('<input type="text" id="websocket_message" value="Data to be send"/><a href=\"javascript:WebSocketSend()\">send WebSocket</a>');
+			  $('#WebSocket_State').html('<input type="text" id="websocket_message" value=""/><a href=\"javascript:WebSocketSend()\">send WebSocket</a>');
 			};
 		   
 			WebSocket_connection.onmessage = function (evt) { 

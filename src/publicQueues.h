@@ -34,10 +34,10 @@ typedef struct {
   char* temperature;
 } Temperature_info;
 
-// WebSocket frame receive queue
-QueueHandle_t WebSocket_rx_queue;
-// WebSocket frame send queue
-QueueHandle_t WebSocket_wx_queue;
+// Json send queue
+QueueHandle_t Json_outgoing_queue;
+// Json receive queue
+QueueHandle_t Json_incoming_queue;
 // Temperatures data queue
 QueueHandle_t Temperatures_queue;
 // Sound queue
