@@ -34,8 +34,8 @@
 void app_main(void)
 {
     startDispatcherTask(1);
-    startWebSocketServer(0);
-    startCheckingTemperatures(0);
-    startValveController(0);
-    startBuzzerController(0);
+    startWebSocketServer(2);
+    startCheckingTemperatures(2);
+    startValveController(2);
+    startBuzzerController(2);
 }

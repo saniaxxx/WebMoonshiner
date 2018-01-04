@@ -44,7 +44,6 @@ void dispatcherTask( void *pvParametres) {
       if (xQueueReceive(Json_incoming_queue, &root, 0) == pdTRUE) {
           xQueueSend (Json_outgoing_queue, &root , 0 );
       }
-      vTaskDelay(1000 / portTICK_PERIOD_MS );
     }
 
     vTaskDelete( NULL );

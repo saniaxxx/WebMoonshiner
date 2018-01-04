@@ -38,7 +38,7 @@ void testOfHardware(){
   //test ds18b20 devices
   portBASE_TYPE xStatus;
   Temperature_info tempinfo;
-  xStatus = xQueueReceive(Temperatures_queue, &tempinfo, 0);
+  xStatus = xQueueReceive(Temperatures_queue, &tempinfo, 100 / portTICK_PERIOD_MS);
   if (xStatus == pdTRUE)
   {
         xQueueSend(Json_outgoing_queue, &tempinfo.temperature, 0);

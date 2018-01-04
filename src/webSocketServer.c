@@ -52,7 +52,7 @@ void web_socket_read_task(void* pvParameters)
 
     while (1) {
         // receive next WebSocket frame from queue
-        if (xQueueReceive(WebSocket_rx_queue, &__RX_frame, 0) == pdTRUE) {
+        if (xQueueReceive(WebSocket_rx_queue, &__RX_frame, 100 / portTICK_PERIOD_MS) == pdTRUE) {
             // write frame inforamtion to UART
             printf("Received new frame from Websocket. Length %d, payload %.*s \r\n",
                 __RX_frame.payload_length, __RX_frame.payload_length,
@@ -77,7 +77,7 @@ void web_socket_write_task(void* pvParameters)
 
     while (1) {
         // receive string from queue
-        if (xQueueReceive(Json_outgoing_queue, &json, 0) == pdTRUE) {
+        if (xQueueReceive(Json_outgoing_queue, &json, 100 / portTICK_PERIOD_MS) == pdTRUE) {
           // stringify json
           char *payload = cJSON_Print(json);
 
