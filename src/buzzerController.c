@@ -78,6 +78,7 @@ void buzzer_task(void* pvParameters)
     for (;;) {
         xStatus = xQueueReceive(Sound_queue, &soundInfo, 100 / portTICK_PERIOD_MS);
         if (xStatus == pdPASS) {
+            printf("sound: duration = %d, pause = %d\n", soundInfo.duration, soundInfo.pause);
             sound(GPIO_OUTPUT, 770, soundInfo.duration);
             vTaskDelay(soundInfo.pause / portTICK_PERIOD_MS);
         }
@@ -88,5 +89,5 @@ void buzzer_task(void* pvParameters)
 
 void startBuzzerController(unsigned int priority)
 {
-    xTaskCreate(buzzer_task, "gpio_task", STACK_SIZE, NULL, priority, NULL);
+    xTaskCreate(buzzer_task, "buzzer_task", STACK_SIZE, NULL, priority, NULL);
 }

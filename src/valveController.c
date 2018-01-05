@@ -60,5 +60,5 @@ unsigned int getValvePWM() {
 }
 
 void startValveController(int priority){
-    xTaskCreate(&blink_task, "blink_task", STACK_SIZE, NULL, priority, NULL);
+    xTaskCreate(blink_task, "blink_task", STACK_SIZE, NULL, priority, NULL);
 }

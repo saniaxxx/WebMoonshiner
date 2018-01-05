@@ -24,4 +24,14 @@
  * SOFTWARE.
 */
 
-void testOfHardware();
+typedef enum MessageType{
+    MessageTypeChangeMode = 1,
+} MessageType;
+
+typedef enum OperationMode{
+    OperationModePass = 1,
+    OperationModeTest = 2,
+} OperationMode;
+
+void testOfHardware(void *pvParametres);
+void doNothing(void *pvParametres);

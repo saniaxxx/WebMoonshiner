@@ -24,6 +24,7 @@
  * SOFTWARE.
 */
 
+#include "dispatcher.h"
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -31,6 +32,32 @@
 #include "publicQueues.h"
 #include "operationModes.h"
 #include "cJSON.h"
+
+static xTaskHandle current_task = NULL;
+
+void stopWorkingTask(){
+  if(current_task){
+    printf("%s\n", "delete working task");
+    vTaskDelete(current_task);
+    current_task = NULL;
+  }
+}
+
+void changeWorkingMode(OperationMode mode){
+  printf("%s\n", "changing working mode");
+  if (mode == OperationModeTest){
+    printf("%s\n", "testOfHardware");
+    stopWorkingTask();
+    xTaskCreate(testOfHardware, "testOfHardware", STACK_SIZE, NULL, TaskPriorityLow, &current_task);
+  }
+  else if (mode == OperationModePass){
+    printf("%s\n", "doNothing");
+    stopWorkingTask();
+    xTaskCreate(doNothing, "doNothing", STACK_SIZE, NULL, TaskPriorityLow, &current_task);
+  }else{
+    printf("%s\n", "unknown mode");
+  }
+}
 
 void dispatcherTask( void *pvParametres) {
     // create queues
@@ -41,14 +68,18 @@ void dispatcherTask( void *pvParametres) {
 
     for( ;; ) {
       cJSON *root = NULL;
-      if (xQueueReceive(Json_incoming_queue, &root, 0) == pdTRUE) {
-          xQueueSend (Json_outgoing_queue, &root , 0 );
+
+      if (xQueueReceive(Json_incoming_queue, &root, 100 / portTICK_PERIOD_MS) == pdTRUE) {
+        MessageType message_type = (MessageType)cJSON_GetObjectItem(root,"type")->valueint;
+        if (message_type == MessageTypeChangeMode) {
+          OperationMode mode = (OperationMode)cJSON_GetObjectItem(root,"mode")->valueint;
+          changeWorkingMode(mode);
+        }
       }
     }
-
     vTaskDelete( NULL );
 }
 
- void startDispatcherTask(int priority){
-   xTaskCreate(&dispatcherTask, "dispatcher_task", STACK_SIZE, NULL, priority, NULL);
- }
+void startDispatcherTask(int priority){
+ xTaskCreate(dispatcherTask, "dispatcher_task", STACK_SIZE, NULL, priority, NULL);
+}

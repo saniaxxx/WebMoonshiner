@@ -24,4 +24,10 @@
  * SOFTWARE.
 */
 
- void startDispatcherTask(int priority);
+typedef enum  TaskPriority {
+    TaskPriorityLow = 1,
+    TaskPriorityMiddle = 2,
+    TaskPriorityHight = 3,
+} TaskPriority;
+
+void startDispatcherTask(int priority);

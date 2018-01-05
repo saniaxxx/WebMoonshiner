@@ -121,11 +121,11 @@ void startWebSocketServer(int priority)
     ESP_ERROR_CHECK(esp_wifi_connect());
 
     // create WebSocker receive task
-    xTaskCreate(&web_socket_read_task, "ws_process_rx", STACK_SIZE, NULL, priority, NULL);
+    xTaskCreate(web_socket_read_task, "ws_process_rx", STACK_SIZE, NULL, priority, NULL);
 
     // create WebSocker send task
-    xTaskCreate(&web_socket_write_task, "ws_process_wx", STACK_SIZE, NULL, priority, NULL);
+    xTaskCreate(web_socket_write_task, "ws_process_wx", STACK_SIZE, NULL, priority, NULL);
 
     // Create Websocket Server Task
-    xTaskCreate(&ws_server, "ws_server", STACK_SIZE, NULL, priority, NULL);
+    xTaskCreate(ws_server, "ws_server", STACK_SIZE, NULL, priority, NULL);
 }

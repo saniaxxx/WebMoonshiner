@@ -29,18 +29,34 @@
 #include "config/config.h"
 #include "publicQueues.h"
 #include "operationModes.h"
+#include "cJSON.h"
 
-void testOfHardware(){
-  //test sound
-  Sound_info soundInfo = {.duration = 100, .pause = 0};
-  xQueueSend(Sound_queue, &soundInfo, 0);
+void testOfHardware(void *pvParametres){
+  for( ;; ) {
+    //test sound
+    Sound_info soundInfo = {.duration = 100, .pause = 500};
+    xQueueSend(Sound_queue, &soundInfo, 0);
+    xQueueSend(Sound_queue, &soundInfo, 0);
+    xQueueSend(Sound_queue, &soundInfo, 0);
 
-  //test ds18b20 devices
-  portBASE_TYPE xStatus;
-  Temperature_info tempinfo;
-  xStatus = xQueueReceive(Temperatures_queue, &tempinfo, 100 / portTICK_PERIOD_MS);
-  if (xStatus == pdTRUE)
-  {
-        xQueueSend(Json_outgoing_queue, &tempinfo.temperature, 0);
+    //test ds18b20 devices
+    portBASE_TYPE xStatus;
+    Temperature_info tempinfo;
+    xStatus = xQueueReceive(Temperatures_queue, &tempinfo, 0);
+    if (xStatus == pdTRUE)
+    {
+      cJSON *root=cJSON_CreateObject();
+      cJSON_AddNumberToObject(root, "temp", tempinfo.temperature);
+      xQueueSend(Json_outgoing_queue, &root, 0);
+    }
+
+    vTaskSuspend( NULL );
+  }
+}
+
+void doNothing(void *pvParametres){
+  for( ;; ) {
+    //nothing to do
+    vTaskDelay( 250 / portTICK_RATE_MS );
   }
 }

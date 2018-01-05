@@ -124,8 +124,8 @@ void checkingTemperaturesTask(void* pvParameters)
                 }
                 Temperature_info temp_data;
                 temp_data.device_index = i;
-                asprintf(&temp_data.temperature, "%.1f", temps[i]);
-                printf("Sending temperature to queue: %s\n", temp_data.temperature);
+                temp_data.temperature = temps[i];
+                //printf("Sending temperature to queue: %s\n", temp_data.temperature);
                 xQueueSendToFront(Temperatures_queue, &temp_data, 0);
             }
 
@@ -142,5 +142,5 @@ void checkingTemperaturesTask(void* pvParameters)
 
 void startCheckingTemperatures(int priority)
 {
-    xTaskCreate(&checkingTemperaturesTask, "dallas_checking", STACK_SIZE, NULL, priority, NULL);
+    xTaskCreate(checkingTemperaturesTask, "dallas_checking", STACK_SIZE, NULL, priority, NULL);
 }

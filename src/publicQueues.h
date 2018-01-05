@@ -31,7 +31,7 @@ typedef struct {
 
 typedef struct {
   unsigned int device_index;
-  char* temperature;
+  float temperature;
 } Temperature_info;
 
 // Json send queue
