@@ -25,5 +25,8 @@
 */
 
 void startValveController(int priority);
+
 unsigned int getValvePWM();
-void setValvePWM(unsigned int percents);
+unsigned int getValvePeriod();
+bool setValvePWM(unsigned int percents);
+bool setValvePeriodMillisec(unsigned int microseconds);

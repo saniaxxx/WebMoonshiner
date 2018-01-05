@@ -33,32 +33,94 @@
 #include "valveController.h"
 
 static unsigned int valve_pwm_percents = 0;
+static unsigned int valve_cycle_period_ms = 5000;
 
-void blink_task(void *pvParameter)
-{
-    gpio_pad_select_gpio(VALVE_GPIO_PIN);
-    /* Set the GPIO as a push/pull output */
-    gpio_set_direction(VALVE_GPIO_PIN, GPIO_MODE_OUTPUT);
-    while(1) {
-      float high_output_period = 1000 * VALVE_CYCLE_PERIOD * valve_pwm_percents / 100;
-      float low_output_period = 1000 * VALVE_CYCLE_PERIOD - high_output_period;
-      /* Set valve off (output low) */
-      gpio_set_level(VALVE_GPIO_PIN, 0);
-      vTaskDelay(low_output_period / portTICK_PERIOD_MS);
-      /* Set valve on (output high) */
-      gpio_set_level(VALVE_GPIO_PIN, valve_pwm_percents?1:0);
-      vTaskDelay(high_output_period / portTICK_PERIOD_MS);
-    }
+xSemaphoreHandle pwmMutex(){
+  static xSemaphoreHandle pwm_mutex = NULL;
+  if(pwm_mutex == NULL){
+    pwm_mutex = xSemaphoreCreateMutex();
+  }
+  return pwm_mutex;
 }
 
-void setValvePWM(unsigned int percents) {
-  valve_pwm_percents = percents;
+xSemaphoreHandle periodMutex(){
+  static xSemaphoreHandle period_mutex = NULL;
+  if(period_mutex == NULL){
+    period_mutex = xSemaphoreCreateMutex();
+  }
+  return period_mutex;
+}
+
+void loop(){
+  if(getValvePWM() == 0){
+    vTaskDelay(100 / portTICK_PERIOD_MS);
+    return;
+  }
+  // calculate periods
+  float high_output_period = getValvePeriod() * getValvePWM() / 100;
+  float low_output_period = getValvePeriod() - high_output_period;
+
+  // set valve off (output low)
+  gpio_set_level(VALVE_GPIO_PIN, 1);
+  vTaskDelay(high_output_period / portTICK_PERIOD_MS);
+
+  // set valve on (output high)
+  gpio_set_level(VALVE_GPIO_PIN, 0);
+  vTaskDelay(low_output_period / portTICK_PERIOD_MS);
+
+  // reset pwm
+  setValvePWM(0);
+}
+
+void valveControllerTask(void *pvParameter){
+  gpio_pad_select_gpio(VALVE_GPIO_PIN);
+  /* Set the GPIO as a push/pull output */
+  gpio_set_direction(VALVE_GPIO_PIN, GPIO_MODE_OUTPUT);
+  while(1) {
+    loop();
+  }
+}
+
+bool setValvePWM(unsigned int percents) {
+  if (percents > 100){
+    return false;
+  }
+  if( xSemaphoreTake( pwmMutex(), portMAX_DELAY ) == pdTRUE ){
+    valve_pwm_percents = percents;
+    xSemaphoreGive( pwmMutex() );
+  }
+  return true;
 }
 
 unsigned int getValvePWM() {
-  return valve_pwm_percents;
+  unsigned int result = 0;
+  if( xSemaphoreTake( pwmMutex(), portMAX_DELAY ) == pdTRUE ){
+    result = valve_pwm_percents;
+    xSemaphoreGive( pwmMutex() );
+  }
+  return result;
+}
+
+bool setValvePeriodMillisec(unsigned int microseconds) {
+  if (microseconds <= 0){
+    return false;
+  }
+  if( xSemaphoreTake( periodMutex(), portMAX_DELAY ) == pdTRUE ){
+    valve_cycle_period_ms = microseconds;
+    xSemaphoreGive( periodMutex() );
+  }
+  return true;
+}
+
+unsigned int getValvePeriod() {
+  unsigned int result = 0;
+  if( xSemaphoreTake( periodMutex(), portMAX_DELAY ) == pdTRUE ){
+    result = valve_cycle_period_ms;
+    xSemaphoreGive( periodMutex() );
+  }
+  return result;
 }
 
 void startValveController(int priority){
-    xTaskCreate(blink_task, "blink_task", STACK_SIZE, NULL, priority, NULL);
+    xTaskCreate(valveControllerTask, "valveControllerTask", STACK_SIZE, NULL, priority, NULL);
 }

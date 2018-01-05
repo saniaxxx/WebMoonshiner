@@ -1,11 +1,13 @@
+#include "ds18b20.h"
+#include "driver/gpio.h"
 
 // Wifi Config
 #define WIFI_SSID "access_point_name"
 #define WIFI_PASSWORD "password"
 
 //Dallas Config
-#define DS18B20_GPIO_PIN       (14) // DS18B20 pin
-#define DS18B20_DEVICES_QUANTITY          (3)  // quantity of DS18B20
+#define DS18B20_GPIO_PIN       (GPIO_NUM_14) // DS18B20 pin
+#define DS18B20_DEVICES_QUANTITY          (4)  // quantity of DS18B20
 #define DS18B20_RESOLUTION   (DS18B20_RESOLUTION_12_BIT)
 #define DS18B20_CHECK_PERIOD        (500)   // milliseconds
 
@@ -16,5 +18,4 @@
 #define STACK_SIZE 2048
 
 // define valve pin
-#define VALVE_GPIO_PIN 33
-#define VALVE_CYCLE_PERIOD 5
+#define VALVE_GPIO_PIN GPIO_NUM_33

@@ -28,17 +28,19 @@
 #include "freertos/task.h"
 #include "config/config.h"
 #include "publicQueues.h"
+#include "valveController.h"
 #include "operationModes.h"
 #include "cJSON.h"
 
+void pickingHeads(void *pvParametres){
+  for( ;; ) {
+    //nothing to do
+    vTaskDelay( 250 / portTICK_RATE_MS );
+  }
+}
+
 void testOfHardware(void *pvParametres){
   for( ;; ) {
-    //test sound
-    Sound_info soundInfo = {.duration = 100, .pause = 500};
-    xQueueSend(Sound_queue, &soundInfo, 0);
-    xQueueSend(Sound_queue, &soundInfo, 0);
-    xQueueSend(Sound_queue, &soundInfo, 0);
-
     //test ds18b20 devices
     portBASE_TYPE xStatus;
     Temperature_info tempinfo;
@@ -50,6 +52,17 @@ void testOfHardware(void *pvParametres){
       xQueueSend(Json_outgoing_queue, &root, 0);
     }
 
+    //test valve
+    setValvePeriodMillisec(100);//100 ms
+    setValvePWM(100);//100%
+
+    //test sound
+    Sound_info soundInfo = {.duration = 100, .pause = 500};
+    xQueueSend(Sound_queue, &soundInfo, 0);
+    xQueueSend(Sound_queue, &soundInfo, 0);
+    xQueueSend(Sound_queue, &soundInfo, 0);
+
+    //sleep
     vTaskSuspend( NULL );
   }
 }
