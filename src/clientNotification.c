@@ -24,18 +24,27 @@
  * SOFTWARE.
 */
 
-typedef enum MessageType{
-    MessageTypeChangeMode = 1,
-} MessageType;
 
-typedef enum OperationMode{
-    OperationModePass = 0,
-    OperationModeTest = 1,
-    OperationModeHeads = 2,
-    OperationModeBody = 3,
-} OperationMode;
+#include "clientNotification.h"
+#include "config/config.h"
+#include "publicQueues.h"
+#include "cJSON.h"
 
-void testOfHardware(void *pvParametres);
-void doNothing(void *pvParametres);
-void pickingHeads(void* pvParametres);
-void pickingBody(void* pvParametres);
+bool sendStatusToClient()
+{
+    portBASE_TYPE xStatus;
+    Temperature_info tempinfo;
+    xStatus = xQueueReceive(Temperatures_queue, &tempinfo, 0);
+    if (xStatus == pdTRUE) {
+        cJSON* root = cJSON_CreateObject();
+        cJSON_AddNumberToObject(root, "temp", tempinfo.temperature);
+        xQueueSend(Json_outgoing_queue, &root, 0);
+        return 1;
+    }
+    return 0;
+}
+
+bool sendAckToClient()
+{
+  return 1;
+}

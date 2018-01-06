@@ -24,18 +24,7 @@
  * SOFTWARE.
 */
 
-typedef enum MessageType{
-    MessageTypeChangeMode = 1,
-} MessageType;
+#include "esp_system.h"
 
-typedef enum OperationMode{
-    OperationModePass = 0,
-    OperationModeTest = 1,
-    OperationModeHeads = 2,
-    OperationModeBody = 3,
-} OperationMode;
-
-void testOfHardware(void *pvParametres);
-void doNothing(void *pvParametres);
-void pickingHeads(void* pvParametres);
-void pickingBody(void* pvParametres);
+bool sendStatusToClient();
+bool sendAckToClient();

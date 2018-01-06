@@ -30,46 +30,69 @@
 #include "publicQueues.h"
 #include "valveController.h"
 #include "operationModes.h"
+#include "clientNotification.h"
 #include "cJSON.h"
 
-void pickingHeads(void *pvParametres){
-  for( ;; ) {
-    //nothing to do
-    vTaskDelay( 250 / portTICK_RATE_MS );
-  }
+void playSoundRepeatedly(unsigned int number_of_times)
+{
+    //test sound
+    Sound_info soundInfo = {.duration = 100, .pause = 500 };
+    for (int i = 0; i < number_of_times; i++) {
+        xQueueSend(Sound_queue, &soundInfo, 0);
+    }
 }
 
-void testOfHardware(void *pvParametres){
-  for( ;; ) {
+void pickingHeads(void* pvParametres)
+{
+    playSoundRepeatedly(OperationModeHeads);
+    setValvePeriodMillisec(5000); // 5 seconds
+    unsigned int pwm = 10; //10% pwm
+    for (;;) {
+        setValvePWM(pwm);
+        sendStatusToClient();
+        vTaskDelay(500 / portTICK_RATE_MS);
+    }
+}
+
+void pickingBody(void* pvParametres)
+{
+    playSoundRepeatedly(OperationModeBody);
+    setValvePeriodMillisec(5000); // 5 seconds
+    unsigned int pwm = 50;
+    for (;;) {
+        setValvePWM(pwm); //10% pwm
+        sendStatusToClient();
+        vTaskDelay(500 / portTICK_RATE_MS);
+    }
+}
+
+void testOfHardware(void* pvParametres)
+{
     //test ds18b20 devices
     portBASE_TYPE xStatus;
     Temperature_info tempinfo;
     xStatus = xQueueReceive(Temperatures_queue, &tempinfo, 0);
-    if (xStatus == pdTRUE)
-    {
-      cJSON *root=cJSON_CreateObject();
-      cJSON_AddNumberToObject(root, "temp", tempinfo.temperature);
-      xQueueSend(Json_outgoing_queue, &root, 0);
+    if (xStatus == pdTRUE) {
+        cJSON* root = cJSON_CreateObject();
+        cJSON_AddNumberToObject(root, "temp", tempinfo.temperature);
+        xQueueSend(Json_outgoing_queue, &root, 0);
     }
 
     //test valve
-    setValvePeriodMillisec(100);//100 ms
-    setValvePWM(100);//100%
+    setValvePeriodMillisec(100); //100 ms
+    setValvePWM(100); //100%
 
     //test sound
-    Sound_info soundInfo = {.duration = 100, .pause = 500};
-    xQueueSend(Sound_queue, &soundInfo, 0);
-    xQueueSend(Sound_queue, &soundInfo, 0);
-    xQueueSend(Sound_queue, &soundInfo, 0);
+    playSoundRepeatedly(OperationModeTest);
 
     //sleep
-    vTaskSuspend( NULL );
-  }
+    vTaskSuspend(NULL);
 }
 
-void doNothing(void *pvParametres){
-  for( ;; ) {
-    //nothing to do
-    vTaskDelay( 250 / portTICK_RATE_MS );
-  }
+void doNothing(void* pvParametres)
+{
+    for (;;) {
+        //nothing to do
+        vTaskDelay(250 / portTICK_RATE_MS);
+    }
 }

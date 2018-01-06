@@ -35,51 +35,70 @@
 
 static xTaskHandle current_task = NULL;
 
-void stopWorkingTask(){
-  if(current_task){
-    printf("%s\n", "delete working task");
-    vTaskDelete(current_task);
-    current_task = NULL;
-  }
+void stopWorkingTask()
+{
+    if (current_task) {
+        printf("%s\n", "delete working task");
+        vTaskDelete(current_task);
+        current_task = NULL;
+    }
 }
 
-void changeWorkingMode(OperationMode mode){
-  printf("%s\n", "changing working mode");
-  if (mode == OperationModeTest){
-    printf("%s\n", "testOfHardware");
-    stopWorkingTask();
-    xTaskCreate(testOfHardware, "testOfHardware", STACK_SIZE, NULL, TaskPriorityLow, &current_task);
-  }
-  else if (mode == OperationModePass){
-    printf("%s\n", "doNothing");
-    stopWorkingTask();
-    xTaskCreate(doNothing, "doNothing", STACK_SIZE, NULL, TaskPriorityLow, &current_task);
-  }else{
-    printf("%s\n", "unknown mode");
-  }
+bool changeWorkingMode(OperationMode mode)
+{
+    printf("%s\n", "changing working mode");
+    if (mode == OperationModeTest) {
+        printf("%s\n", "starting testOfHardware");
+        stopWorkingTask();
+        xTaskCreate(testOfHardware, "testOfHardware", STACK_SIZE, NULL, TaskPriorityLow, &current_task);
+    }
+    else if (mode == OperationModePass) {
+        stopWorkingTask();
+        printf("%s\n", "starting doNothing");
+        xTaskCreate(doNothing, "doNothing", STACK_SIZE, NULL, TaskPriorityLow, &current_task);
+    }
+    else if (mode == OperationModeHeads) {
+        stopWorkingTask();
+        printf("%s\n", "starting pickingHeads");
+        xTaskCreate(pickingHeads, "pickingHeads", STACK_SIZE, NULL, TaskPriorityLow, &current_task);
+    }
+    else if (mode == OperationModeBody) {
+        stopWorkingTask();
+        printf("%s\n", "starting pickingBody");
+        xTaskCreate(pickingBody, "pickingBody", STACK_SIZE, NULL, TaskPriorityLow, &current_task);
+    }
+    else {
+        printf("%s\n", "unknown mode");
+        return false;
+    }
+    return true;
 }
 
-void dispatcherTask( void *pvParametres) {
+void dispatcherTask(void* pvParametres)
+{
     // create queues
     Json_outgoing_queue = xQueueCreate(10, sizeof(cJSON*));
     Json_incoming_queue = xQueueCreate(10, sizeof(cJSON*));
     Temperatures_queue = xQueueCreate(3, sizeof(Temperature_info));
     Sound_queue = xQueueCreate(10, sizeof(Sound_info));
 
-    for( ;; ) {
-      cJSON *root = NULL;
+    for (;;) {
+        cJSON* root = NULL;
 
-      if (xQueueReceive(Json_incoming_queue, &root, 100 / portTICK_PERIOD_MS) == pdTRUE) {
-        MessageType message_type = (MessageType)cJSON_GetObjectItem(root,"type")->valueint;
-        if (message_type == MessageTypeChangeMode) {
-          OperationMode mode = (OperationMode)cJSON_GetObjectItem(root,"mode")->valueint;
-          changeWorkingMode(mode);
+        if (xQueueReceive(Json_incoming_queue, &root, 100 / portTICK_PERIOD_MS) == pdTRUE) {
+            MessageType message_type = (MessageType)cJSON_GetObjectItem(root, "type")->valueint;
+            if (message_type == MessageTypeChangeMode) {
+                OperationMode mode = (OperationMode)cJSON_GetObjectItem(root, "mode")->valueint;
+                if (changeWorkingMode(mode)) {
+                    // TODO notify ok
+                }
+            }
         }
-      }
     }
-    vTaskDelete( NULL );
+    vTaskDelete(NULL);
 }
 
-void startDispatcherTask(int priority){
- xTaskCreate(dispatcherTask, "dispatcher_task", STACK_SIZE, NULL, priority, NULL);
+void startDispatcherTask(int priority)
+{
+    xTaskCreate(dispatcherTask, "dispatcher_task", STACK_SIZE, NULL, priority, NULL);
 }

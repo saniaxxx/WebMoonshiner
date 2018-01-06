@@ -85,9 +85,9 @@ void web_socket_write_task(void* pvParameters)
           size_t payload_length = strlen(payload);
 
           // write inforamtion to UART
-          printf("Sending frame to Websocket . Length %d, payload %.*s \r\n",
-              payload_length, payload_length,
-              payload);
+          // printf("Sending frame to Websocket . Length %d, payload %.*s \r\n",
+          //     payload_length, payload_length,
+          //     payload);
 
           // send
           err_t error = WS_write_data(payload, payload_length);
