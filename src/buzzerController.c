@@ -40,7 +40,6 @@
 #include "config/config.h"
 #include "publicQueues.h"
 
-#define GPIO_OUTPUT 32
 #define GPIO_OUTPUT_SPEED LEDC_HIGH_SPEED_MODE
 
 void sound(int gpio_num, uint32_t freq, uint32_t duration)
@@ -79,7 +78,7 @@ void buzzer_task(void* pvParameters)
         xStatus = xQueueReceive(Sound_queue, &soundInfo, 100 / portTICK_PERIOD_MS);
         if (xStatus == pdPASS) {
             printf("sound: duration = %d, pause = %d\n", soundInfo.duration, soundInfo.pause);
-            sound(GPIO_OUTPUT, 770, soundInfo.duration);
+            sound(BUZZER_GPIO_PIN, 770, soundInfo.duration);
             vTaskDelay(soundInfo.pause / portTICK_PERIOD_MS);
         }
     }

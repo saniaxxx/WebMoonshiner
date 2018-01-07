@@ -19,3 +19,6 @@
 
 // define valve pin
 #define VALVE_GPIO_PIN GPIO_NUM_33
+
+//define buzzer pin
+#define BUZZER_GPIO_PIN GPIO_NUM_32
