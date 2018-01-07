@@ -70,6 +70,15 @@ void sound(int gpio_num, uint32_t freq, uint32_t duration)
     ledc_update_duty(GPIO_OUTPUT_SPEED, LEDC_CHANNEL_0);
 }
 
+void playSoundRepeatedly(unsigned int number_of_times)
+{
+    //test sound
+    Sound_info soundInfo = {.duration = 100, .pause = 300 };
+    for (int i = 0; i < number_of_times; i++) {
+        xQueueSend(Sound_queue, &soundInfo, 0);
+    }
+}
+
 void buzzer_task(void* pvParameters)
 {
     Sound_info soundInfo;

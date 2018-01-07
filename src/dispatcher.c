@@ -31,6 +31,7 @@
 #include "config/config.h"
 #include "publicQueues.h"
 #include "operationModes.h"
+#include "buzzerController.h"
 #include "cJSON.h"
 
 static xTaskHandle current_task = NULL;
@@ -44,34 +45,29 @@ void stopWorkingTask()
     }
 }
 
+workingModeFunction getFunctionForMode(OperationMode mode){
+    static workingModeFunction workingModes[5] = {testOfHardware, boostMode, selfEmployment, pickingHeads, pickingBody};
+    int cnt = sizeof(workingModes)/sizeof(workingModeFunction);
+    if(mode >= 0 && mode < cnt){
+        return workingModes[mode];
+    }
+    return NULL;
+}
+
 bool changeWorkingMode(OperationMode mode)
 {
-    printf("%s\n", "changing working mode");
-    if (mode == OperationModeTest) {
-        printf("%s\n", "starting testOfHardware");
+    workingModeFunction taskToCall = getFunctionForMode(mode);
+    if (taskToCall){
+        printf("%s\n", "changing working mode");
         stopWorkingTask();
-        xTaskCreate(testOfHardware, "testOfHardware", STACK_SIZE, NULL, TaskPriorityLow, &current_task);
-    }
-    else if (mode == OperationModePass) {
-        stopWorkingTask();
-        printf("%s\n", "starting doNothing");
-        xTaskCreate(doNothing, "doNothing", STACK_SIZE, NULL, TaskPriorityLow, &current_task);
-    }
-    else if (mode == OperationModeHeads) {
-        stopWorkingTask();
-        printf("%s\n", "starting pickingHeads");
-        xTaskCreate(pickingHeads, "pickingHeads", STACK_SIZE, NULL, TaskPriorityLow, &current_task);
-    }
-    else if (mode == OperationModeBody) {
-        stopWorkingTask();
-        printf("%s\n", "starting pickingBody");
-        xTaskCreate(pickingBody, "pickingBody", STACK_SIZE, NULL, TaskPriorityLow, &current_task);
+        xTaskCreate(taskToCall, "workingMode", STACK_SIZE, NULL, TaskPriorityLow, &current_task);
+        playSoundRepeatedly(mode + 1);
+        return true;
     }
     else {
         printf("%s\n", "unknown mode");
         return false;
     }
-    return true;
 }
 
 void dispatcherTask(void* pvParametres)
@@ -91,6 +87,8 @@ void dispatcherTask(void* pvParametres)
                 OperationMode mode = (OperationMode)cJSON_GetObjectItem(root, "mode")->valueint;
                 if (changeWorkingMode(mode)) {
                     // TODO notify ok
+                }else{
+                    // TODO notify error
                 }
             }
         }

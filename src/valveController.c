@@ -78,7 +78,7 @@ void configureValve(uint32_t gpio_port, uint32_t freq, ledc_mode_t speed, ledc_t
 void openCloseValve(ledc_mode_t speed, ledc_channel_t channel, uint32_t high_duration, uint32_t low_duration)
 {
     // open
-    ledc_set_duty(speed, channel, 0x0352);// 85%
+    ledc_set_duty(speed, channel, 0x03FF);//0x0352 85%
     ledc_update_duty(speed, channel);
     vTaskDelay(high_duration / portTICK_PERIOD_MS);
     // close
@@ -92,7 +92,7 @@ void valveControllerTask(void* pvParameter)
     ledc_mode_t speed = LEDC_HIGH_SPEED_MODE;
     ledc_channel_t channel = LEDC_CHANNEL_1;
     ledc_timer_t timer = LEDC_TIMER_1;
-    uint32_t freq = 500;
+    uint32_t freq = 1000;
 
     configureValve(VALVE_GPIO_PIN, freq, speed, timer, channel);
 

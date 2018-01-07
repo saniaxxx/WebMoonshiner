@@ -25,3 +25,4 @@
 */
 
 void startBuzzerController(unsigned int priority);
+void playSoundRepeatedly(unsigned int number_of_times);

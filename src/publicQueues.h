@@ -24,6 +24,9 @@
  * SOFTWARE.
 */
 
+#include "freertos/FreeRTOS.h"
+#include "freertos/queue.h"
+
 typedef struct {
   unsigned int duration;
   unsigned int pause;
