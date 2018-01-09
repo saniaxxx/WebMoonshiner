@@ -30,7 +30,7 @@
 #include "publicQueues.h"
 #include "valveController.h"
 #include "operationModes.h"
-#include "clientNotification.h"
+#include "jsonClient.h"
 #include "cJSON.h"
 
 void testOfHardware(void* pvParametres)
@@ -74,7 +74,7 @@ void pickingHeads(void* pvParametres)
     unsigned int pwm = 10; //10% pwm
     for (;;) {
         setValvePWM(pwm);
-        sendStatusToClient();
+        sendTempToClient();
         vTaskDelay(500 / portTICK_RATE_MS);
     }
 }
@@ -85,7 +85,7 @@ void pickingBody(void* pvParametres)
     unsigned int pwm = 50;
     for (;;) {
         setValvePWM(pwm); //10% pwm
-        sendStatusToClient();
+        sendTempToClient();
         vTaskDelay(500 / portTICK_RATE_MS);
     }
 }

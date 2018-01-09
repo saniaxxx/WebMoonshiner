@@ -30,18 +30,6 @@ typedef enum  TaskPriority {
     TaskPriorityHight = 3,
 } TaskPriority;
 
-typedef enum MessageType{
-    MessageTypeChangeMode = 1,
-} MessageType;
-
-typedef enum OperationMode{
-    OperationModeTest = 0,
-    OperationModeBoost = 1,
-    OperationModeSelf = 2,
-    OperationModeHeads = 3,
-    OperationModeBody = 4,
-} OperationMode;
-
 typedef void (*workingModeFunction)(void* pvParametres);
 
 void startDispatcherTask(int priority);

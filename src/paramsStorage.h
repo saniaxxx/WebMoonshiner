@@ -24,27 +24,14 @@
  * SOFTWARE.
 */
 
+#include "esp_types.h"
+#include "esp_err.h"
 
-#include "clientNotification.h"
-#include "config/config.h"
-#include "publicQueues.h"
-#include "cJSON.h"
+typedef enum  PreParameter {
+    PreParameter1 = 1,
+    PreParameter2 = 2,
+    PreParameter3 = 3,
+} PreParameter;
 
-bool sendStatusToClient()
-{
-    portBASE_TYPE xStatus;
-    Temperature_info tempinfo;
-    xStatus = xQueueReceive(Temperatures_queue, &tempinfo, 0);
-    if (xStatus == pdTRUE) {
-        cJSON* root = cJSON_CreateObject();
-        cJSON_AddNumberToObject(root, "temp", tempinfo.temperature);
-        xQueueSend(Json_outgoing_queue, &root, 0);
-        return 1;
-    }
-    return 0;
-}
-
-bool sendAckToClient()
-{
-  return 1;
-}
+uint32_t getPreParameter(PreParameter parameter, esp_err_t *err);
+void setPreParameter(PreParameter parameter, uint32_t value, esp_err_t *err);

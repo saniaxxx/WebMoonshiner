@@ -25,13 +25,13 @@
 */
 
 #include "dispatcher.h"
-#include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "config/config.h"
 #include "publicQueues.h"
 #include "operationModes.h"
 #include "buzzerController.h"
+#include "jsonClient.h"
 #include "cJSON.h"
 
 static xTaskHandle current_task = NULL;
@@ -79,19 +79,7 @@ void dispatcherTask(void* pvParametres)
     Sound_queue = xQueueCreate(10, sizeof(Sound_info));
 
     for (;;) {
-        cJSON* root = NULL;
-
-        if (xQueueReceive(Json_incoming_queue, &root, 100 / portTICK_PERIOD_MS) == pdTRUE) {
-            MessageType message_type = (MessageType)cJSON_GetObjectItem(root, "type")->valueint;
-            if (message_type == MessageTypeChangeMode) {
-                OperationMode mode = (OperationMode)cJSON_GetObjectItem(root, "mode")->valueint;
-                if (changeWorkingMode(mode)) {
-                    // TODO notify ok
-                }else{
-                    // TODO notify error
-                }
-            }
-        }
+        handleClientMessage(&changeWorkingMode);
     }
     vTaskDelete(NULL);
 }

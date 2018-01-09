@@ -26,5 +26,19 @@
 
 #include "esp_system.h"
 
-bool sendStatusToClient();
-bool sendAckToClient();
+typedef enum MessageType{
+    MessageTypeChangeMode = 1,
+    MessageTypeGetPreParameter = 2,
+    MessageTypeSetPreParameter = 3,
+} MessageType;
+
+typedef enum OperationMode{
+    OperationModeTest = 0,
+    OperationModeBoost = 1,
+    OperationModeSelf = 2,
+    OperationModeHeads = 3,
+    OperationModeBody = 4,
+} OperationMode;
+
+bool sendTempToClient();
+void handleClientMessage(bool (*changeWorkingMode)(OperationMode));
