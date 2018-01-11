@@ -32,16 +32,9 @@ typedef struct {
   unsigned int pause;
 } Sound_info;
 
-typedef struct {
-  unsigned int device_index;
-  float temperature;
-} Temperature_info;
-
 // Json send queue
 QueueHandle_t Json_outgoing_queue;
 // Json receive queue
 QueueHandle_t Json_incoming_queue;
-// Temperatures data queue
-QueueHandle_t Temperatures_queue;
 // Sound queue
 QueueHandle_t Sound_queue;

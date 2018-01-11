@@ -46,13 +46,13 @@ void initStorage(nvs_handle *handle, esp_err_t *err){
     ESP_ERROR_CHECK( *err );
 
     // Open
-    printf("\n");
-    printf("Opening Non-Volatile Storage (NVS) handle... ");
+    // printf("\n");
+    // printf("Opening Non-Volatile Storage (NVS) handle... ");
     *err = nvs_open(STORAGE_NAMESPACE, NVS_READWRITE, handle);
     if (*err != ESP_OK) {
         printf("Error (%d) opening NVS handle!\n", *err);
     } else {
-        printf("Done\n");
+        //printf("Done\n");
     }
 }
 
@@ -66,13 +66,13 @@ uint32_t getPreParameter(PreParameter parameter, esp_err_t *err){
     sprintf(parameterName, "%d", parameter);
 
     // Read
-    printf("Reading parameter from NVS ... ");
+    //printf("Reading parameter from NVS ... ");
     int32_t value = 0; // value will default to 0, if not set yet in NVS
     *err = nvs_get_i32(handle, parameterName, &value);
     switch (*err) {
         case ESP_OK:
-            printf("Done\n");
-            printf("Value counter = %d\n", value);
+            // printf("Done\n");
+            // printf("Value = %d\n", value);
             break;
         case ESP_ERR_NVS_NOT_FOUND:
             printf("The value is not initialized yet!\n");
@@ -93,14 +93,14 @@ void setPreParameter(PreParameter parameter, uint32_t value, esp_err_t *err){
     sprintf(parameterName, "%d", parameter);
 
     // Write
-    printf("Updating value in NVS ... ");
+    // printf("Updating value in NVS ... ");
     *err = nvs_set_i32(handle, parameterName, value);
-    printf((*err != ESP_OK) ? "Failed!\n" : "Done\n");
+    //printf((*err != ESP_OK) ? "Failed!\n" : "Done\n");
     if(*err) return;
 
-    printf("Committing updates in NVS ... ");
+    //printf("Committing updates in NVS ... ");
     *err = nvs_commit(handle);
-    printf((*err != ESP_OK) ? "Failed!\n" : "Done\n");
+    //printf((*err != ESP_OK) ? "Failed!\n" : "Done\n");
 
     // Close
     nvs_close(handle);

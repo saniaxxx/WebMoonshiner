@@ -24,4 +24,11 @@
  * SOFTWARE.
 */
 
+typedef struct {
+  float temperatureFirst;
+  float temperatureSecond;
+  float temperatureThird;
+} Temperature_info;
+
 void startCheckingTemperatures(int priority);
+Temperature_info getTemperatures();

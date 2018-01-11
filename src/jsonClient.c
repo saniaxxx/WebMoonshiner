@@ -33,23 +33,23 @@
 #include "paramsStorage.h"
 #include "cJSON.h"
 
-bool sendTempToClient()
+void sendTempToClient()
 {
-    portBASE_TYPE xStatus;
-    Temperature_info tempinfo;
-    xStatus = xQueueReceive(Temperatures_queue, &tempinfo, 0);
-    if (xStatus == pdTRUE) {
-        cJSON* root = cJSON_CreateObject();
-        cJSON_AddNumberToObject(root, "temp", tempinfo.temperature);
-        xQueueSend(Json_outgoing_queue, &root, 0);
-        return 1;
-    }
-    return 0;
+    Temperature_info info =  getTemperatures();
+    cJSON *root,*temps;
+  	root=cJSON_CreateObject();
+    cJSON_AddNumberToObject(root,"type", ServerMessageTypeTemperature);
+  	cJSON_AddItemToObject(root, "t", temps=cJSON_CreateObject());
+  	cJSON_AddNumberToObject(temps,"t1", info.temperatureFirst);
+    cJSON_AddNumberToObject(temps,"t2", info.temperatureSecond);
+    cJSON_AddNumberToObject(temps,"t3", info.temperatureThird);
+    xQueueSend(Json_outgoing_queue, &root, 0);
 }
 
 void sendAckToClient(esp_err_t err)
 {
     cJSON* root = cJSON_CreateObject();
+    cJSON_AddNumberToObject(root,"type", ServerMessageTypeAck);
     cJSON_AddNumberToObject(root, "error", err);
     xQueueSend(Json_outgoing_queue, &root, 0);
 }
@@ -57,22 +57,22 @@ void sendAckToClient(esp_err_t err)
 void handleClientMessage(bool (*changeWorkingMode)(OperationMode)){
   cJSON* root = NULL;
   if (xQueueReceive(Json_incoming_queue, &root, 100 / portTICK_PERIOD_MS) == pdTRUE) {
-      MessageType message_type = (MessageType)cJSON_GetObjectItem(root, "type")->valueint;
-      if (message_type == MessageTypeChangeMode) {
+      ClientMessageType message_type = (ClientMessageType)cJSON_GetObjectItem(root, "type")->valueint;
+      if (message_type == ClientMessageTypeChangeMode) {
           OperationMode mode = (OperationMode)cJSON_GetObjectItem(root, "mode")->valueint;
           if (changeWorkingMode(mode)) {
               sendAckToClient(ESP_OK);
           }else{
               sendAckToClient(ESP_FAIL);
           }
-      }else if(message_type == MessageTypeGetPreParameter){
+      }else if(message_type == ClientMessageTypeGetPreParameter){
           PreParameter parameter = (PreParameter)cJSON_GetObjectItem(root, "parameter")->valueint;
           esp_err_t err;
           uint32_t value = getPreParameter(parameter, &err);
           cJSON* root = cJSON_CreateObject();
           cJSON_AddNumberToObject(root, "value", value);
           xQueueSend(Json_outgoing_queue, &root, 0);
-      }else if(message_type == MessageTypeSetPreParameter){
+      }else if(message_type == ClientMessageTypeSetPreParameter){
           PreParameter parameter = (PreParameter)cJSON_GetObjectItem(root, "parameter")->valueint;
           uint32_t value = (uint32_t)cJSON_GetObjectItem(root, "value")->valueint;
           esp_err_t err;

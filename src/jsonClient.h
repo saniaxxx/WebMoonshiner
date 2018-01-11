@@ -26,11 +26,16 @@
 
 #include "esp_system.h"
 
-typedef enum MessageType{
-    MessageTypeChangeMode = 1,
-    MessageTypeGetPreParameter = 2,
-    MessageTypeSetPreParameter = 3,
-} MessageType;
+typedef enum ServerMessageType{
+    ServerMessageTypeTemperature = 0,
+    ServerMessageTypeAck = 1,
+} ServerMessageType;
+
+typedef enum ClientMessageType{
+    ClientMessageTypeChangeMode = 0,
+    ClientMessageTypeGetPreParameter = 1,
+    ClientMessageTypeSetPreParameter = 2,
+} ClientMessageType;
 
 typedef enum OperationMode{
     OperationModeTest = 0,
@@ -40,5 +45,5 @@ typedef enum OperationMode{
     OperationModeBody = 4,
 } OperationMode;
 
-bool sendTempToClient();
+void sendTempToClient();
 void handleClientMessage(bool (*changeWorkingMode)(OperationMode));

@@ -75,7 +75,6 @@ void dispatcherTask(void* pvParametres)
     // create queues
     Json_outgoing_queue = xQueueCreate(10, sizeof(cJSON*));
     Json_incoming_queue = xQueueCreate(10, sizeof(cJSON*));
-    Temperatures_queue = xQueueCreate(3, sizeof(Temperature_info));
     Sound_queue = xQueueCreate(10, sizeof(Sound_info));
 
     for (;;) {

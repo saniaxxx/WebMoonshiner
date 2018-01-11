@@ -31,19 +31,15 @@
 #include "valveController.h"
 #include "operationModes.h"
 #include "jsonClient.h"
+#include "buzzerController.h"
+#include "paramsStorage.h"
+#include "temperatureChecker.h"
 #include "cJSON.h"
 
 void testOfHardware(void* pvParametres)
 {
     //test ds18b20 devices
-    portBASE_TYPE xStatus;
-    Temperature_info tempinfo;
-    xStatus = xQueueReceive(Temperatures_queue, &tempinfo, 0);
-    if (xStatus == pdTRUE) {
-        cJSON* root = cJSON_CreateObject();
-        cJSON_AddNumberToObject(root, "temp", tempinfo.temperature);
-        xQueueSend(Json_outgoing_queue, &root, 0);
-    }
+    sendTempToClient();
 
     //test valve
     setValvePeriodMillisec(100); //100 ms
@@ -54,17 +50,33 @@ void testOfHardware(void* pvParametres)
 }
 
 void boostMode(void *pvParametres){
+    bool wasNotified = false;
     for (;;) {
-        //nothing to do
-        vTaskDelay(250 / portTICK_RATE_MS);
+        esp_err_t err;
+        uint32_t activationTemperature = getPreParameter(CoolingActivationTemperature, &err);
+        Temperature_info info =  getTemperatures();
+        if(wasNotified && info.temperatureFirst >= activationTemperature){
+            playSoundRepeatedly(5);
+            wasNotified = true;
+        }
+        sendTempToClient();
+        vTaskDelay(1000 / portTICK_RATE_MS);
     }
 }
 
 void selfEmployment(void* pvParametres)
 {
+    esp_err_t err;
+    uint32_t himselfWorkingTime = getPreParameter(HimselfWorkingTime, &err);
+    uint32_t himselfWorkingTimeInTicks = himselfWorkingTime * 60 / portTICK_RATE_MS;
+    portTickType LastTick = xTaskGetTickCount();
     for (;;) {
-        //nothing to do
-        vTaskDelay(250 / portTICK_RATE_MS);
+        if((xTaskGetTickCount() - LastTick) > himselfWorkingTimeInTicks){
+              playSoundRepeatedly(5);
+              vTaskSuspend(NULL);
+        }
+        sendTempToClient();
+        vTaskDelay(1000 / portTICK_RATE_MS);
     }
 }
 

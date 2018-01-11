@@ -28,9 +28,12 @@
 #include "esp_err.h"
 
 typedef enum  PreParameter {
-    PreParameter1 = 1,
-    PreParameter2 = 2,
-    PreParameter3 = 3,
+    HeadPickingSpeed = 1, // скорость отбора голов в процентах
+    BodyPickingSpeed = 2, // скорость отбора тела в процентах
+    FinishTemperature = 3, // температура завершения отбора тела в градусах
+    CoolingActivationTemperature = 4, // температура включения воды охлаждения в градусах
+    ValvePickingSpeed = 5, // скорость отбора открытого клапана в мл/час
+    HimselfWorkingTime = 6, // время работы на себя в минутах
 } PreParameter;
 
 uint32_t getPreParameter(PreParameter parameter, esp_err_t *err);

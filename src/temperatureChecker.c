@@ -36,6 +36,39 @@
 #include "temperatureChecker.h"
 #include "publicQueues.h"
 
+static Temperature_info temperatures;
+
+xSemaphoreHandle temperatureMutex()
+{
+    static xSemaphoreHandle pwm_mutex = NULL;
+    if (pwm_mutex == NULL) {
+        pwm_mutex = xSemaphoreCreateMutex();
+    }
+    return pwm_mutex;
+}
+
+Temperature_info getTemperatures(){
+  Temperature_info result;
+  if (xSemaphoreTake(temperatureMutex(), portMAX_DELAY) == pdTRUE) {
+      result = temperatures;
+      xSemaphoreGive(temperatureMutex());
+  }
+  return result;
+}
+
+bool setTemperature(uint32_t device_index, float temperature){
+  if (xSemaphoreTake(temperatureMutex(), portMAX_DELAY) == pdTRUE) {
+      if(device_index == 0){
+          temperatures.temperatureFirst = temperature;
+      }else if(device_index == 1){
+          temperatures.temperatureSecond = temperature;
+      }else if(device_index == 2){
+          temperatures.temperatureThird = temperature;
+      }
+      xSemaphoreGive(temperatureMutex());
+  }
+  return true;
+}
 
 void checkingTemperaturesTask(void* pvParameters)
 {
@@ -122,11 +155,7 @@ void checkingTemperaturesTask(void* pvParameters)
                 if (temps[i] == DS18B20_INVALID_READING) {
                     ++crc_errors[i];
                 }
-                Temperature_info temp_data;
-                temp_data.device_index = i;
-                temp_data.temperature = temps[i];
-                //printf("Sending temperature to queue: %s\n", temp_data.temperature);
-                xQueueSendToFront(Temperatures_queue, &temp_data, 0);
+                setTemperature(i, temps[i]);
             }
 
             // Make up periodic delay to approximately one sample period per measurement
