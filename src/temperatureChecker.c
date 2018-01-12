@@ -59,11 +59,11 @@ Temperature_info getTemperatures(){
 bool setTemperature(uint32_t device_index, float temperature){
   if (xSemaphoreTake(temperatureMutex(), portMAX_DELAY) == pdTRUE) {
       if(device_index == 0){
-          temperatures.temperatureFirst = temperature;
+          temperatures.deflegmatorTemperature = temperature;
       }else if(device_index == 1){
-          temperatures.temperatureSecond = temperature;
+          temperatures.cubeTemperature = temperature;
       }else if(device_index == 2){
-          temperatures.temperatureThird = temperature;
+          temperatures.columnTemperature = temperature;
       }
       xSemaphoreGive(temperatureMutex());
   }

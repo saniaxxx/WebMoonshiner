@@ -45,5 +45,5 @@ typedef enum OperationMode{
     OperationModeBody = 4,
 } OperationMode;
 
-void sendTempToClient();
+void sendStatusToClient(float pwm);
 void handleClientMessage(bool (*changeWorkingMode)(OperationMode));

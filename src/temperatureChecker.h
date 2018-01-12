@@ -25,9 +25,9 @@
 */
 
 typedef struct {
-  float temperatureFirst;
-  float temperatureSecond;
-  float temperatureThird;
+  float deflegmatorTemperature;
+  float cubeTemperature;
+  float columnTemperature;
 } Temperature_info;
 
 void startCheckingTemperatures(int priority);

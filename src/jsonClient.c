@@ -33,16 +33,17 @@
 #include "paramsStorage.h"
 #include "cJSON.h"
 
-void sendTempToClient()
+void sendStatusToClient(float pwm)
 {
     Temperature_info info =  getTemperatures();
     cJSON *root,*temps;
   	root=cJSON_CreateObject();
     cJSON_AddNumberToObject(root,"type", ServerMessageTypeTemperature);
+    cJSON_AddNumberToObject(root,"pwm", pwm);
   	cJSON_AddItemToObject(root, "t", temps=cJSON_CreateObject());
-  	cJSON_AddNumberToObject(temps,"t1", info.temperatureFirst);
-    cJSON_AddNumberToObject(temps,"t2", info.temperatureSecond);
-    cJSON_AddNumberToObject(temps,"t3", info.temperatureThird);
+  	cJSON_AddNumberToObject(temps,"def", info.deflegmatorTemperature);
+    cJSON_AddNumberToObject(temps,"cube", info.cubeTemperature);
+    cJSON_AddNumberToObject(temps,"column", info.columnTemperature);
     xQueueSend(Json_outgoing_queue, &root, 0);
 }
 

@@ -34,6 +34,9 @@ typedef enum  PreParameter {
     CoolingActivationTemperature = 4, // температура включения воды охлаждения в градусах
     ValvePickingSpeed = 5, // скорость отбора открытого клапана в мл/час
     HimselfWorkingTime = 6, // время работы на себя в минутах
+    ValvePeriod = 7, // период срабатывания клапана
+    DeltaTemperature = 8, // дельта залета температуры колонны
+    DecreasePickingTemperature = 9, // температура снижения отбора
 } PreParameter;
 
 uint32_t getPreParameter(PreParameter parameter, esp_err_t *err);
