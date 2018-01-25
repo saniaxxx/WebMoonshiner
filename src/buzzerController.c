@@ -86,7 +86,7 @@ void buzzer_task(void* pvParameters)
     for (;;) {
         xStatus = xQueueReceive(Sound_queue, &soundInfo, 100 / portTICK_PERIOD_MS);
         if (xStatus == pdPASS) {
-            printf("sound: duration = %d, pause = %d\n", soundInfo.duration, soundInfo.pause);
+            //printf("sound: duration = %d, pause = %d\n", soundInfo.duration, soundInfo.pause);
             sound(BUZZER_GPIO_PIN, 770, soundInfo.duration);
             vTaskDelay(soundInfo.pause / portTICK_PERIOD_MS);
         }

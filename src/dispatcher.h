@@ -33,3 +33,4 @@ typedef enum  TaskPriority {
 typedef void (*workingModeFunction)(void* pvParametres);
 
 void startDispatcherTask(int priority);
+void startDebugTask(int priority);

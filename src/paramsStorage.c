@@ -71,15 +71,15 @@ uint32_t getPreParameter(PreParameter parameter, esp_err_t *err){
     *err = nvs_get_i32(handle, parameterName, &value);
     switch (*err) {
         case ESP_OK:
-            // printf("Done\n");
-            // printf("Value = %d\n", value);
             break;
         case ESP_ERR_NVS_NOT_FOUND:
             printf("The value is not initialized yet!\n");
             break;
         default :
             printf("Error (%d) reading!\n", *err);
+            break;
     }
+    nvs_close(handle);
     return value;
 }
 

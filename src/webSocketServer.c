@@ -54,9 +54,9 @@ void web_socket_read_task(void* pvParameters)
         // receive next WebSocket frame from queue
         if (xQueueReceive(WebSocket_rx_queue, &__RX_frame, 100 / portTICK_PERIOD_MS) == pdTRUE) {
             // write frame inforamtion to UART
-            printf("Received new frame from Websocket. Length %d, payload %.*s \r\n",
-                __RX_frame.payload_length, __RX_frame.payload_length,
-                __RX_frame.payload);
+            // printf("Received new frame from Websocket. Length %d, payload %.*s \r\n",
+            //     __RX_frame.payload_length, __RX_frame.payload_length,
+            //     __RX_frame.payload);
 
             cJSON *root = cJSON_Parse(__RX_frame.payload);
             xQueueSend (Json_incoming_queue, &root , 0 );
@@ -79,24 +79,22 @@ void web_socket_write_task(void* pvParameters)
         // receive string from queue
         if (xQueueReceive(Json_outgoing_queue, &json, 100 / portTICK_PERIOD_MS) == pdTRUE) {
           // stringify json
-          char *payload = cJSON_Print(json);
-
-          // get size
-          size_t payload_length = strlen(payload);
-
-          // write inforamtion to UART
-          // printf("Sending frame to Websocket . Length %d, payload %.*s \r\n",
-          //     payload_length, payload_length,
-          //     payload);
-
-          // send
-          err_t error = WS_write_data(payload, payload_length);
-          if (error) {
-            printf("Error sending frame to Websocket, code = %d \r\n", error);
+          char *payload = cJSON_PrintUnformatted(json);
+          // check null
+          if(payload == NULL){
+            printf("Error sending frame, payload is NULL");
+            return;
           }
-
+          // get size
+          size_t length = strlen(payload);
+          // send
+          err_t error = WS_write_data(payload, length);
+          if (error) {
+              printf("Error sending frame to Websocket, code = %d \r\n", error);
+          }
           //free memory
           cJSON_Delete(json);
+          free(payload);
         }
     }
     vTaskDelete( NULL );

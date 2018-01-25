@@ -83,7 +83,21 @@ void dispatcherTask(void* pvParametres)
     vTaskDelete(NULL);
 }
 
+void debugTask(void* pvParametres)
+{
+    for (;;) {
+        printf("free memory =  %d\n",esp_get_free_heap_size());
+        vTaskDelay(1000 / portTICK_RATE_MS);
+    }
+    vTaskDelete(NULL);
+}
+
 void startDispatcherTask(int priority)
 {
     xTaskCreate(dispatcherTask, "dispatcher_task", STACK_SIZE, NULL, priority, NULL);
+}
+
+void startDebugTask(int priority)
+{
+    xTaskCreate(debugTask, "debug_task", STACK_SIZE, NULL, priority, NULL);
 }

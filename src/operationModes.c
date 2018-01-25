@@ -34,7 +34,6 @@
 #include "buzzerController.h"
 #include "paramsStorage.h"
 #include "temperatureChecker.h"
-#include "cJSON.h"
 
 void testOfHardware(void* pvParametres)
 {
@@ -55,7 +54,7 @@ void boostMode(void *pvParametres){
         esp_err_t err;
         uint32_t activationTemperature = getPreParameter(CoolingActivationTemperature, &err);
         Temperature_info info =  getTemperatures();
-        if(wasNotified && info.cubeTemperature >= activationTemperature){
+        if(!wasNotified && info.cubeTemperature >= activationTemperature){
             playSoundRepeatedly(5);
             wasNotified = true;
         }

@@ -70,9 +70,9 @@ void handleClientMessage(bool (*changeWorkingMode)(OperationMode)){
           PreParameter parameter = (PreParameter)cJSON_GetObjectItem(root, "parameter")->valueint;
           esp_err_t err;
           uint32_t value = getPreParameter(parameter, &err);
-          cJSON* root = cJSON_CreateObject();
-          cJSON_AddNumberToObject(root, "value", value);
-          xQueueSend(Json_outgoing_queue, &root, 0);
+          cJSON* json = cJSON_CreateObject();
+          cJSON_AddNumberToObject(json, "value", value);
+          xQueueSend(Json_outgoing_queue, &json, 0);
       }else if(message_type == ClientMessageTypeSetPreParameter){
           PreParameter parameter = (PreParameter)cJSON_GetObjectItem(root, "parameter")->valueint;
           uint32_t value = (uint32_t)cJSON_GetObjectItem(root, "value")->valueint;
@@ -80,5 +80,6 @@ void handleClientMessage(bool (*changeWorkingMode)(OperationMode)){
           setPreParameter(parameter, value, &err);
           sendAckToClient(err);
       }
+      cJSON_Delete(root);
   }
 }
