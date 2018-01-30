@@ -28,6 +28,7 @@
 #include "esp_err.h"
 
 typedef enum  PreParameter {
+    WifiMode = 0, // режим wifi, 0 - клиент, 1 - сервер
     HeadPickingSpeed = 1, // скорость отбора голов в процентах
     BodyPickingSpeed = 2, // скорость отбора тела в процентах
     FinishTemperature = 3, // температура завершения отбора тела в градусах

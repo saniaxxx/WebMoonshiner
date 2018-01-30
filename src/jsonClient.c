@@ -32,6 +32,7 @@
 #include "publicQueues.h"
 #include "paramsStorage.h"
 #include "cJSON.h"
+#include "wifiController.h"
 
 void sendStatusToClient(float pwm)
 {
@@ -79,6 +80,9 @@ void handleClientMessage(bool (*changeWorkingMode)(OperationMode)){
           esp_err_t err;
           setPreParameter(parameter, value, &err);
           sendAckToClient(err);
+          if (parameter == WifiMode) {
+              restartWifi();
+          }
       }
       cJSON_Delete(root);
   }

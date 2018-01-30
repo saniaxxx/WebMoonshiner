@@ -2,8 +2,11 @@
 #include "driver/gpio.h"
 
 // Wifi Config
-#define WIFI_SSID "access_point_name"
-#define WIFI_PASSWORD "password"
+#define WIFI_STA_SSID "ssid"
+#define WIFI_STA_PASSWORD "password"
+
+#define WIFI_AP_SSID "ESP32"
+#define WIFI_AP_PASSWORD "12345678"
 
 //Dallas Config
 #define DS18B20_GPIO_PIN       (GPIO_NUM_14) // DS18B20 pin
