@@ -28,4 +28,5 @@ void testOfHardware(void *pvParametres);
 void boostMode(void *pvParametres);
 void selfEmployment(void* pvParametres);
 void pickingHeads(void* pvParametres);
-void pickingBody(void* pvParametres);
+void pickingBodyByColumnTemperature(void* pvParametres);
+void pickingBodyByCubeTemperature(void* pvParametres);

@@ -46,7 +46,8 @@ void stopWorkingTask()
 }
 
 workingModeFunction getFunctionForMode(OperationMode mode){
-    static workingModeFunction workingModes[5] = {testOfHardware, boostMode, selfEmployment, pickingHeads, pickingBody};
+    static workingModeFunction workingModes[6] = {testOfHardware, boostMode, selfEmployment
+      , pickingHeads, pickingBodyByCubeTemperature, pickingBodyByColumnTemperature};
     int cnt = sizeof(workingModes)/sizeof(workingModeFunction);
     if(mode >= 0 && mode < cnt){
         return workingModes[mode];
@@ -86,7 +87,7 @@ void dispatcherTask(void* pvParametres)
 void debugTask(void* pvParametres)
 {
     for (;;) {
-        printf("free memory =  %d\n",esp_get_free_heap_size());
+        //printf("free memory =  %d\n",esp_get_free_heap_size());
         vTaskDelay(1000 / portTICK_RATE_MS);
     }
     vTaskDelete(NULL);

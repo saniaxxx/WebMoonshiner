@@ -92,7 +92,7 @@ void pickingHeads(void* pvParametres)
     }
 }
 
-void pickingBody(void* pvParametres)
+void pickingBodyByCubeTemperature(void* pvParametres)
 {
     for (;;) {
         esp_err_t err;
@@ -114,6 +114,30 @@ void pickingBody(void* pvParametres)
             pwm = (delta - overstatement) / delta * basepwm; // автоуменьшение
         }
         setValvePWM(pwm);
+        sendStatusToClient(pwm);
+        vTaskDelay(500 / portTICK_RATE_MS);
+    }
+}
+
+void pickingBodyByColumnTemperature(void* pvParametres)
+{
+    float stable_temperature = getTemperatures().columnTemperature;
+    for (;;) {
+        esp_err_t err;
+        //uint32_t delta = getPreParameter(DeltaTemperature, &err);
+        float delta = 0.5;
+        uint32_t finish_temp = getPreParameter(FinishTemperature, &err);
+        uint32_t pwm = getPreParameter(BodyPickingSpeed, &err);
+        uint32_t period = getPreParameter(ValvePeriod, &err);
+        setValvePeriodMillisec(period);
+        Temperature_info info =  getTemperatures();
+        if(info.cubeTemperature > finish_temp){
+            playSoundRepeatedly(5);
+            vTaskSuspend(NULL);
+        }
+        else if (info.columnTemperature - stable_temperature < delta){
+            setValvePWM(pwm);
+        }
         sendStatusToClient(pwm);
         vTaskDelay(500 / portTICK_RATE_MS);
     }
