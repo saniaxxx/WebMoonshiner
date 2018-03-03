@@ -42,60 +42,58 @@
 
 #define GPIO_OUTPUT_SPEED LEDC_HIGH_SPEED_MODE
 
-void sound(int gpio_num, uint32_t freq, uint32_t duration)
-{
-    ledc_timer_config_t timer_conf;
-    timer_conf.speed_mode = GPIO_OUTPUT_SPEED;
-    timer_conf.bit_num = LEDC_TIMER_10_BIT;
-    timer_conf.timer_num = LEDC_TIMER_0;
-    timer_conf.freq_hz = freq;
-    ledc_timer_config(&timer_conf);
+void sound(int gpio_num, uint32_t freq, uint32_t duration) {
+  ledc_timer_config_t timer_conf;
+  timer_conf.speed_mode = GPIO_OUTPUT_SPEED;
+  timer_conf.bit_num = LEDC_TIMER_10_BIT;
+  timer_conf.timer_num = LEDC_TIMER_0;
+  timer_conf.freq_hz = freq;
+  ledc_timer_config(&timer_conf);
 
-    ledc_channel_config_t ledc_conf;
-    ledc_conf.gpio_num = gpio_num;
-    ledc_conf.speed_mode = GPIO_OUTPUT_SPEED;
-    ledc_conf.channel = LEDC_CHANNEL_0;
-    ledc_conf.intr_type = LEDC_INTR_DISABLE;
-    ledc_conf.timer_sel = LEDC_TIMER_0;
-    ledc_conf.duty = 0x0; // 50%=0x3FFF, 100%=0x7FFF for 15 Bit
-    // 50%=0x01FF, 100%=0x03FF for 10 Bit
-    ledc_channel_config(&ledc_conf);
+  ledc_channel_config_t ledc_conf;
+  ledc_conf.gpio_num = gpio_num;
+  ledc_conf.speed_mode = GPIO_OUTPUT_SPEED;
+  ledc_conf.channel = LEDC_CHANNEL_0;
+  ledc_conf.intr_type = LEDC_INTR_DISABLE;
+  ledc_conf.timer_sel = LEDC_TIMER_0;
+  ledc_conf.duty = 0x0;  // 50%=0x3FFF, 100%=0x7FFF for 15 Bit
+  // 50%=0x01FF, 100%=0x03FF for 10 Bit
+  ledc_channel_config(&ledc_conf);
 
-    // start
-    ledc_set_duty(GPIO_OUTPUT_SPEED, LEDC_CHANNEL_0, 0x7F); // 12% duty - play here for your speaker or buzzer
-    ledc_update_duty(GPIO_OUTPUT_SPEED, LEDC_CHANNEL_0);
-    vTaskDelay(duration / portTICK_PERIOD_MS);
-    // stop
-    ledc_set_duty(GPIO_OUTPUT_SPEED, LEDC_CHANNEL_0, 0);
-    ledc_update_duty(GPIO_OUTPUT_SPEED, LEDC_CHANNEL_0);
+  // start
+  ledc_set_duty(GPIO_OUTPUT_SPEED, LEDC_CHANNEL_0,
+                0x7F);  // 12% duty - play here for your speaker or buzzer
+  ledc_update_duty(GPIO_OUTPUT_SPEED, LEDC_CHANNEL_0);
+  vTaskDelay(duration / portTICK_PERIOD_MS);
+  // stop
+  ledc_set_duty(GPIO_OUTPUT_SPEED, LEDC_CHANNEL_0, 0);
+  ledc_update_duty(GPIO_OUTPUT_SPEED, LEDC_CHANNEL_0);
 }
 
-void playSoundRepeatedly(unsigned int number_of_times)
-{
-    //test sound
-    Sound_info soundInfo = {.duration = 100, .pause = 300 };
-    for (int i = 0; i < number_of_times; i++) {
-        xQueueSend(Sound_queue, &soundInfo, 0);
+void playSoundRepeatedly(unsigned int number_of_times) {
+  // test sound
+  Sound_info soundInfo = {.duration = 100, .pause = 300};
+  for (int i = 0; i < number_of_times; i++) {
+    xQueueSend(Sound_queue, &soundInfo, 0);
+  }
+}
+
+void buzzer_task(void *pvParameters) {
+  Sound_info soundInfo;
+  portBASE_TYPE xStatus;
+  for (;;) {
+    xStatus = xQueueReceive(Sound_queue, &soundInfo, 100 / portTICK_PERIOD_MS);
+    if (xStatus == pdPASS) {
+      // printf("sound: duration = %d, pause = %d\n", soundInfo.duration,
+      // soundInfo.pause);
+      sound(BUZZER_GPIO_PIN, 770, soundInfo.duration);
+      vTaskDelay(soundInfo.pause / portTICK_PERIOD_MS);
     }
+  }
+
+  vTaskDelete(NULL);
 }
 
-void buzzer_task(void* pvParameters)
-{
-    Sound_info soundInfo;
-    portBASE_TYPE xStatus;
-    for (;;) {
-        xStatus = xQueueReceive(Sound_queue, &soundInfo, 100 / portTICK_PERIOD_MS);
-        if (xStatus == pdPASS) {
-            //printf("sound: duration = %d, pause = %d\n", soundInfo.duration, soundInfo.pause);
-            sound(BUZZER_GPIO_PIN, 770, soundInfo.duration);
-            vTaskDelay(soundInfo.pause / portTICK_PERIOD_MS);
-        }
-    }
-
-    vTaskDelete(NULL);
-}
-
-void startBuzzerController(unsigned int priority)
-{
-    xTaskCreate(buzzer_task, "buzzer_task", STACK_SIZE, NULL, priority, NULL);
+void startBuzzerController(unsigned int priority) {
+  xTaskCreate(buzzer_task, "buzzer_task", STACK_SIZE, NULL, priority, NULL);
 }

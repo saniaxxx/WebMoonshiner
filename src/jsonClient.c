@@ -24,7 +24,6 @@
  * SOFTWARE.
 */
 
-
 #include "jsonClient.h"
 #include "operationModes.h"
 #include "temperatureChecker.h"
@@ -34,56 +33,59 @@
 #include "cJSON.h"
 #include "wifiController.h"
 
-void sendStatusToClient(float pwm)
-{
-    Temperature_info info =  getTemperatures();
-    cJSON *root,*temps;
-  	root=cJSON_CreateObject();
-    cJSON_AddNumberToObject(root,"type", ServerMessageTypeTemperature);
-    cJSON_AddNumberToObject(root,"pwm", pwm);
-  	cJSON_AddItemToObject(root, "t", temps=cJSON_CreateObject());
-  	cJSON_AddNumberToObject(temps,"def", info.deflegmatorTemperature);
-    cJSON_AddNumberToObject(temps,"cube", info.cubeTemperature);
-    cJSON_AddNumberToObject(temps,"column", info.columnTemperature);
-    xQueueSend(Json_outgoing_queue, &root, 0);
+void sendStatusToClient(float pwm) {
+  Temperature_info info = getTemperatures();
+  cJSON *root, *temps;
+  root = cJSON_CreateObject();
+  cJSON_AddNumberToObject(root, "type", ServerMessageTypeTemperature);
+  cJSON_AddNumberToObject(root, "pwm", pwm);
+  cJSON_AddItemToObject(root, "t", temps = cJSON_CreateObject());
+  cJSON_AddNumberToObject(temps, "def", info.deflegmatorTemperature);
+  cJSON_AddNumberToObject(temps, "cube", info.cubeTemperature);
+  cJSON_AddNumberToObject(temps, "column", info.columnTemperature);
+  xQueueSend(Json_outgoing_queue, &root, 0);
 }
 
-void sendAckToClient(esp_err_t err)
-{
-    cJSON* root = cJSON_CreateObject();
-    cJSON_AddNumberToObject(root,"type", ServerMessageTypeAck);
-    cJSON_AddNumberToObject(root, "error", err);
-    xQueueSend(Json_outgoing_queue, &root, 0);
+void sendAckToClient(esp_err_t err) {
+  cJSON* root = cJSON_CreateObject();
+  cJSON_AddNumberToObject(root, "type", ServerMessageTypeAck);
+  cJSON_AddNumberToObject(root, "error", err);
+  xQueueSend(Json_outgoing_queue, &root, 0);
 }
 
-void handleClientMessage(bool (*changeWorkingMode)(OperationMode)){
+void handleClientMessage(bool (*changeWorkingMode)(OperationMode)) {
   cJSON* root = NULL;
-  if (xQueueReceive(Json_incoming_queue, &root, 100 / portTICK_PERIOD_MS) == pdTRUE) {
-      ClientMessageType message_type = (ClientMessageType)cJSON_GetObjectItem(root, "type")->valueint;
-      if (message_type == ClientMessageTypeChangeMode) {
-          OperationMode mode = (OperationMode)cJSON_GetObjectItem(root, "mode")->valueint;
-          if (changeWorkingMode(mode)) {
-              sendAckToClient(ESP_OK);
-          }else{
-              sendAckToClient(ESP_FAIL);
-          }
-      }else if(message_type == ClientMessageTypeGetPreParameter){
-          PreParameter parameter = (PreParameter)cJSON_GetObjectItem(root, "parameter")->valueint;
-          esp_err_t err;
-          uint32_t value = getPreParameter(parameter, &err);
-          cJSON* json = cJSON_CreateObject();
-          cJSON_AddNumberToObject(json, "value", value);
-          xQueueSend(Json_outgoing_queue, &json, 0);
-      }else if(message_type == ClientMessageTypeSetPreParameter){
-          PreParameter parameter = (PreParameter)cJSON_GetObjectItem(root, "parameter")->valueint;
-          uint32_t value = (uint32_t)cJSON_GetObjectItem(root, "value")->valueint;
-          esp_err_t err;
-          setPreParameter(parameter, value, &err);
-          sendAckToClient(err);
-          if (parameter == WifiMode) {
-              restartWifi();
-          }
+  if (xQueueReceive(Json_incoming_queue, &root, 100 / portTICK_PERIOD_MS) ==
+      pdTRUE) {
+    ClientMessageType message_type =
+        (ClientMessageType)cJSON_GetObjectItem(root, "type")->valueint;
+    if (message_type == ClientMessageTypeChangeMode) {
+      OperationMode mode =
+          (OperationMode)cJSON_GetObjectItem(root, "mode")->valueint;
+      if (changeWorkingMode(mode)) {
+        sendAckToClient(ESP_OK);
+      } else {
+        sendAckToClient(ESP_FAIL);
       }
-      cJSON_Delete(root);
+    } else if (message_type == ClientMessageTypeGetPreParameter) {
+      PreParameter parameter =
+          (PreParameter)cJSON_GetObjectItem(root, "parameter")->valueint;
+      esp_err_t err;
+      uint32_t value = getPreParameter(parameter, &err);
+      cJSON* json = cJSON_CreateObject();
+      cJSON_AddNumberToObject(json, "value", value);
+      xQueueSend(Json_outgoing_queue, &json, 0);
+    } else if (message_type == ClientMessageTypeSetPreParameter) {
+      PreParameter parameter =
+          (PreParameter)cJSON_GetObjectItem(root, "parameter")->valueint;
+      uint32_t value = (uint32_t)cJSON_GetObjectItem(root, "value")->valueint;
+      esp_err_t err;
+      setPreParameter(parameter, value, &err);
+      sendAckToClient(err);
+      if (parameter == WifiMode) {
+        restartWifi();
+      }
+    }
+    cJSON_Delete(root);
   }
 }

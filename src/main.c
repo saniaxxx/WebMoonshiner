@@ -24,7 +24,6 @@
  * SOFTWARE.
 */
 
-
 #include "webSocketServer.h"
 #include "temperatureChecker.h"
 #include "dispatcher.h"
@@ -32,13 +31,12 @@
 #include "buzzerController.h"
 #include "wifiController.h"
 
-void app_main(void)
-{
-    restartWifi();
-    startDispatcherTask(TaskPriorityMiddle);
-    startWebSocketServer(TaskPriorityHight);
-    startCheckingTemperatures(TaskPriorityHight);
-    startValveController(TaskPriorityHight);
-    startBuzzerController(TaskPriorityHight);
-    startDebugTask(TaskPriorityHight);
+void app_main(void) {
+  restartWifi();
+  startDispatcherTask(TaskPriorityMiddle);
+  startWebSocketServer(TaskPriorityHight);
+  startCheckingTemperatures(TaskPriorityHight);
+  startValveController(TaskPriorityHight);
+  startBuzzerController(TaskPriorityHight);
+  startDebugTask(TaskPriorityHight);
 }

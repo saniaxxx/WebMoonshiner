@@ -35,110 +35,106 @@
 #include "paramsStorage.h"
 #include "temperatureChecker.h"
 
-void testOfHardware(void* pvParametres)
-{
-    //test ds18b20 devices
-    sendStatusToClient(0);
+void testOfHardware(void* pvParametres) {
+  // test ds18b20 devices
+  sendStatusToClient(0);
 
-    //test valve
-    setValvePeriodMillisec(100); //100 ms
-    setValvePWM(100); //100%
+  // test valve
+  setValvePeriodMillisec(100);  // 100 ms
+  setValvePWM(100);  // 100%
 
-    //sleep
-    vTaskSuspend(NULL);
+  // sleep
+  vTaskSuspend(NULL);
 }
 
-void boostMode(void *pvParametres){
-    bool wasNotified = false;
-    for (;;) {
-        esp_err_t err;
-        uint32_t activationTemperature = getPreParameter(CoolingActivationTemperature, &err);
-        Temperature_info info =  getTemperatures();
-        if(!wasNotified && info.cubeTemperature >= activationTemperature){
-            playSoundRepeatedly(5);
-            wasNotified = true;
-        }
-        sendStatusToClient(0);
-        vTaskDelay(1000 / portTICK_RATE_MS);
-    }
-}
-
-void selfEmployment(void* pvParametres)
-{
+void boostMode(void* pvParametres) {
+  bool wasNotified = false;
+  for (;;) {
     esp_err_t err;
-    uint32_t himselfWorkingTime = getPreParameter(HimselfWorkingTime, &err);
-    uint32_t himselfWorkingTimeInTicks = himselfWorkingTime * 60 * portTICK_RATE_MS;
-    portTickType LastTick = xTaskGetTickCount();
-    for (;;) {
-        if((xTaskGetTickCount() - LastTick) > himselfWorkingTimeInTicks){
-              playSoundRepeatedly(5);
-              vTaskSuspend(NULL);
-        }
-        sendStatusToClient(0);
-        vTaskDelay(500 / portTICK_RATE_MS);
+    uint32_t activationTemperature =
+        getPreParameter(CoolingActivationTemperature, &err);
+    Temperature_info info = getTemperatures();
+    if (!wasNotified && info.cubeTemperature >= activationTemperature) {
+      playSoundRepeatedly(5);
+      wasNotified = true;
     }
+    sendStatusToClient(0);
+    vTaskDelay(1000 / portTICK_RATE_MS);
+  }
 }
 
-void pickingHeads(void* pvParametres)
-{
-    for (;;) {
-        esp_err_t err;
-        uint32_t pwm = getPreParameter(HeadPickingSpeed, &err);
-        uint32_t period = getPreParameter(ValvePeriod, &err);
-        setValvePeriodMillisec(period);
-        setValvePWM(pwm);
-        sendStatusToClient(pwm);
-        vTaskDelay(500 / portTICK_RATE_MS);
+void selfEmployment(void* pvParametres) {
+  esp_err_t err;
+  uint32_t himselfWorkingTime = getPreParameter(HimselfWorkingTime, &err);
+  uint32_t himselfWorkingTimeInTicks =
+      himselfWorkingTime * 60 * portTICK_RATE_MS;
+  portTickType LastTick = xTaskGetTickCount();
+  for (;;) {
+    if ((xTaskGetTickCount() - LastTick) > himselfWorkingTimeInTicks) {
+      playSoundRepeatedly(5);
+      vTaskSuspend(NULL);
     }
+    sendStatusToClient(0);
+    vTaskDelay(500 / portTICK_RATE_MS);
+  }
 }
 
-void pickingBodyByCubeTemperature(void* pvParametres)
-{
-    for (;;) {
-        esp_err_t err;
-        uint32_t decrease_temp = getPreParameter(DecreasePickingTemperature, &err);
-        uint32_t finish_temp = getPreParameter(FinishTemperature, &err);
-        uint32_t basepwm = getPreParameter(BodyPickingSpeed, &err);
-        uint32_t period = getPreParameter(ValvePeriod, &err);
-        setValvePeriodMillisec(period);
-        float pwm = 0;
-        Temperature_info info =  getTemperatures();
-        if(info.cubeTemperature > finish_temp){
-            playSoundRepeatedly(5);
-            vTaskSuspend(NULL);
-        }else if(info.cubeTemperature < decrease_temp){
-            pwm = basepwm; //нет уменьшения
-        }else{
-            uint32_t delta = finish_temp - decrease_temp; // считаем за 100 процентов
-            uint32_t overstatement = decrease_temp - info.cubeTemperature; // залет
-            pwm = (delta - overstatement) / delta * basepwm; // автоуменьшение
-        }
-        setValvePWM(pwm);
-        sendStatusToClient(pwm);
-        vTaskDelay(500 / portTICK_RATE_MS);
-    }
+void pickingHeads(void* pvParametres) {
+  for (;;) {
+    esp_err_t err;
+    uint32_t pwm = getPreParameter(HeadPickingSpeed, &err);
+    uint32_t period = getPreParameter(ValvePeriod, &err);
+    setValvePeriodMillisec(period);
+    setValvePWM(pwm);
+    sendStatusToClient(pwm);
+    vTaskDelay(500 / portTICK_RATE_MS);
+  }
 }
 
-void pickingBodyByColumnTemperature(void* pvParametres)
-{
-    float stable_temperature = getTemperatures().columnTemperature;
-    for (;;) {
-        esp_err_t err;
-        //uint32_t delta = getPreParameter(DeltaTemperature, &err);
-        float delta = 0.5;
-        uint32_t finish_temp = getPreParameter(FinishTemperature, &err);
-        uint32_t pwm = getPreParameter(BodyPickingSpeed, &err);
-        uint32_t period = getPreParameter(ValvePeriod, &err);
-        setValvePeriodMillisec(period);
-        Temperature_info info =  getTemperatures();
-        if(info.cubeTemperature > finish_temp){
-            playSoundRepeatedly(5);
-            vTaskSuspend(NULL);
-        }
-        else if (info.columnTemperature - stable_temperature < delta){
-            setValvePWM(pwm);
-        }
-        sendStatusToClient(pwm);
-        vTaskDelay(500 / portTICK_RATE_MS);
+void pickingBodyByCubeTemperature(void* pvParametres) {
+  for (;;) {
+    esp_err_t err;
+    uint32_t decrease_temp = getPreParameter(DecreasePickingTemperature, &err);
+    uint32_t finish_temp = getPreParameter(FinishTemperature, &err);
+    uint32_t basepwm = getPreParameter(BodyPickingSpeed, &err);
+    uint32_t period = getPreParameter(ValvePeriod, &err);
+    setValvePeriodMillisec(period);
+    float pwm = 0;
+    Temperature_info info = getTemperatures();
+    if (info.cubeTemperature > finish_temp) {
+      playSoundRepeatedly(5);
+      vTaskSuspend(NULL);
+    } else if (info.cubeTemperature < decrease_temp) {
+      pwm = basepwm;  //нет уменьшения
+    } else {
+      uint32_t delta = finish_temp - decrease_temp;  // считаем за 100 процентов
+      uint32_t overstatement = decrease_temp - info.cubeTemperature;  // залет
+      pwm = (delta - overstatement) / delta * basepwm;  // автоуменьшение
     }
+    setValvePWM(pwm);
+    sendStatusToClient(pwm);
+    vTaskDelay(500 / portTICK_RATE_MS);
+  }
+}
+
+void pickingBodyByColumnTemperature(void* pvParametres) {
+  float stable_temperature = getTemperatures().columnTemperature;
+  for (;;) {
+    esp_err_t err;
+    // uint32_t delta = getPreParameter(DeltaTemperature, &err);
+    float delta = 0.5;
+    uint32_t finish_temp = getPreParameter(FinishTemperature, &err);
+    uint32_t pwm = getPreParameter(BodyPickingSpeed, &err);
+    uint32_t period = getPreParameter(ValvePeriod, &err);
+    setValvePeriodMillisec(period);
+    Temperature_info info = getTemperatures();
+    if (info.cubeTemperature > finish_temp) {
+      playSoundRepeatedly(5);
+      vTaskSuspend(NULL);
+    } else if (info.columnTemperature - stable_temperature < delta) {
+      setValvePWM(pwm);
+    }
+    sendStatusToClient(pwm);
+    vTaskDelay(500 / portTICK_RATE_MS);
+  }
 }

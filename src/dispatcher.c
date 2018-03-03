@@ -36,69 +36,68 @@
 
 static xTaskHandle current_task = NULL;
 
-void stopWorkingTask()
-{
-    if (current_task) {
-        printf("%s\n", "delete working task");
-        vTaskDelete(current_task);
-        current_task = NULL;
-    }
+void stopWorkingTask() {
+  if (current_task) {
+    printf("%s\n", "delete working task");
+    vTaskDelete(current_task);
+    current_task = NULL;
+  }
 }
 
-workingModeFunction getFunctionForMode(OperationMode mode){
-    static workingModeFunction workingModes[6] = {testOfHardware, boostMode, selfEmployment
-      , pickingHeads, pickingBodyByCubeTemperature, pickingBodyByColumnTemperature};
-    int cnt = sizeof(workingModes)/sizeof(workingModeFunction);
-    if(mode >= 0 && mode < cnt){
-        return workingModes[mode];
-    }
-    return NULL;
+workingModeFunction getFunctionForMode(OperationMode mode) {
+  static workingModeFunction workingModes[6] = {testOfHardware,
+                                                boostMode,
+                                                selfEmployment,
+                                                pickingHeads,
+                                                pickingBodyByCubeTemperature,
+                                                pickingBodyByColumnTemperature};
+  int cnt = sizeof(workingModes) / sizeof(workingModeFunction);
+  if (mode >= 0 && mode < cnt) {
+    return workingModes[mode];
+  }
+  return NULL;
 }
 
-bool changeWorkingMode(OperationMode mode)
-{
-    workingModeFunction taskToCall = getFunctionForMode(mode);
-    if (taskToCall){
-        printf("%s\n", "changing working mode");
-        stopWorkingTask();
-        xTaskCreate(taskToCall, "workingMode", STACK_SIZE, NULL, TaskPriorityLow, &current_task);
-        playSoundRepeatedly(mode + 1);
-        return true;
-    }
-    else {
-        printf("%s\n", "unknown mode");
-        return false;
-    }
+bool changeWorkingMode(OperationMode mode) {
+  workingModeFunction taskToCall = getFunctionForMode(mode);
+  if (taskToCall) {
+    printf("%s\n", "changing working mode");
+    stopWorkingTask();
+    xTaskCreate(taskToCall, "workingMode", STACK_SIZE, NULL, TaskPriorityLow,
+                &current_task);
+    playSoundRepeatedly(mode + 1);
+    return true;
+  } else {
+    printf("%s\n", "unknown mode");
+    return false;
+  }
 }
 
-void dispatcherTask(void* pvParametres)
-{
-    // create queues
-    Json_outgoing_queue = xQueueCreate(10, sizeof(cJSON*));
-    Json_incoming_queue = xQueueCreate(10, sizeof(cJSON*));
-    Sound_queue = xQueueCreate(10, sizeof(Sound_info));
+void dispatcherTask(void* pvParametres) {
+  // create queues
+  Json_outgoing_queue = xQueueCreate(10, sizeof(cJSON*));
+  Json_incoming_queue = xQueueCreate(10, sizeof(cJSON*));
+  Sound_queue = xQueueCreate(10, sizeof(Sound_info));
 
-    for (;;) {
-        handleClientMessage(&changeWorkingMode);
-    }
-    vTaskDelete(NULL);
+  for (;;) {
+    handleClientMessage(&changeWorkingMode);
+  }
+  vTaskDelete(NULL);
 }
 
-void debugTask(void* pvParametres)
-{
-    for (;;) {
-        //printf("free memory =  %d\n",esp_get_free_heap_size());
-        vTaskDelay(1000 / portTICK_RATE_MS);
-    }
-    vTaskDelete(NULL);
+void debugTask(void* pvParametres) {
+  for (;;) {
+    // printf("free memory =  %d\n",esp_get_free_heap_size());
+    vTaskDelay(1000 / portTICK_RATE_MS);
+  }
+  vTaskDelete(NULL);
 }
 
-void startDispatcherTask(int priority)
-{
-    xTaskCreate(dispatcherTask, "dispatcher_task", STACK_SIZE, NULL, priority, NULL);
+void startDispatcherTask(int priority) {
+  xTaskCreate(dispatcherTask, "dispatcher_task", STACK_SIZE, NULL, priority,
+              NULL);
 }
 
-void startDebugTask(int priority)
-{
-    xTaskCreate(debugTask, "debug_task", STACK_SIZE, NULL, priority, NULL);
+void startDebugTask(int priority) {
+  xTaskCreate(debugTask, "debug_task", STACK_SIZE, NULL, priority, NULL);
 }
