@@ -31,8 +31,15 @@
 #include "nvs_flash.h"
 #include "nvs.h"
 #include "paramsStorage.h"
+#include "esp_ota_ops.h"
 
 #define STORAGE_NAMESPACE "pps"
+
+typedef struct {
+    uint32_t min;
+    uint32_t max;
+} PreParameterRange;
+
 
 void initStorage(nvs_handle *handle, esp_err_t *err){
     // Initialize NVS
@@ -56,7 +63,101 @@ void initStorage(nvs_handle *handle, esp_err_t *err){
     }
 }
 
+bool isParameterExists(PreParameter parameter){
+    switch (parameter) {
+        case WifiMode:
+        case HeadPickingSpeed:
+        case BodyPickingSpeed:
+        case FinishTemperature:
+        case ValvePickingSpeed:
+        case HimselfWorkingTime:
+        case ValvePeriod:
+        case DeltaTemperature:
+        case DecreasePickingTemperature:
+        case CoolingActivationTemperature:
+            return true;
+        default:
+            return false;
+      }
+}
+
+PreParameterRange getRangeForPreParameter(PreParameter parameter){
+    PreParameterRange result;
+    switch (parameter) {
+        case WifiMode:
+            result.min = 0;
+            result.max = 1;
+            break;
+        case HeadPickingSpeed:
+        case BodyPickingSpeed:
+            result.min = 0;
+            result.max = 100;
+            break;
+        case FinishTemperature:
+            result.min = 85;
+            result.max = 100;
+            break;
+        case ValvePickingSpeed:
+            result.min = 100;
+            result.max = 10000;
+            break;
+        case HimselfWorkingTime:
+            result.min = 1;
+            result.max = 180;
+            break;
+        case ValvePeriod:
+            result.min = 1000;
+            result.max = 20000;
+            break;
+        case DeltaTemperature:
+            result.min = 1;
+            result.max = 20;
+            break;
+        case DecreasePickingTemperature:
+            result.min = 75;
+            result.max = 85;
+            break;
+        case CoolingActivationTemperature:
+            result.min = 60;
+            result.max = 75;
+            break;
+      }
+      return result;
+}
+
+uint32_t getDefaultValueForPreParameter(PreParameter parameter){
+    switch (parameter) {
+        case WifiMode:
+            return 1;
+        case HeadPickingSpeed:
+            return 10;
+        case BodyPickingSpeed:
+            return 50;
+        case FinishTemperature:
+            return 93;
+        case CoolingActivationTemperature:
+            return 73;
+        case ValvePickingSpeed:
+            return 2000;
+        case HimselfWorkingTime:
+            return 30;
+        case ValvePeriod:
+            return 8000;
+        case DeltaTemperature:
+            return 3;
+        case DecreasePickingTemperature:
+            return 85;
+        default:
+            return 0;
+      }
+}
+
 uint32_t getPreParameter(PreParameter parameter, esp_err_t *err){
+    //check parameter
+    if(!isParameterExists(parameter)){
+        *err = ESP_ERR_NVS_INVALID_NAME;
+        return 0;
+    }
     //Init
     nvs_handle handle;
     initStorage(&handle, err);
@@ -74,9 +175,11 @@ uint32_t getPreParameter(PreParameter parameter, esp_err_t *err){
             break;
         case ESP_ERR_NVS_NOT_FOUND:
             printf("The value is not initialized yet!\n");
+            value = getDefaultValueForPreParameter(parameter);
             break;
         default :
             printf("Error (%d) reading!\n", *err);
+            value = getDefaultValueForPreParameter(parameter);
             break;
     }
     nvs_close(handle);
@@ -84,6 +187,16 @@ uint32_t getPreParameter(PreParameter parameter, esp_err_t *err){
 }
 
 void setPreParameter(PreParameter parameter, uint32_t value, esp_err_t *err){
+    //check parameter
+    PreParameterRange range = getRangeForPreParameter(parameter);
+    if(!isParameterExists(parameter)){
+        *err = ESP_ERR_NVS_INVALID_NAME;
+        return;
+    }
+    if(value < range.min || value > range.max){
+        *err = ESP_ERR_OTA_VALIDATE_FAILED;
+        return;
+    }
     nvs_handle handle;
     initStorage(&handle, err);
     if(*err) return;

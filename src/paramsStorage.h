@@ -32,12 +32,12 @@ typedef enum  PreParameter {
     HeadPickingSpeed = 1, // скорость отбора голов в процентах
     BodyPickingSpeed = 2, // скорость отбора тела в процентах
     FinishTemperature = 3, // температура завершения отбора тела в градусах
-    CoolingActivationTemperature = 4, // температура включения воды охлаждения в градусах
-    ValvePickingSpeed = 5, // скорость отбора открытого клапана в мл/час
-    HimselfWorkingTime = 6, // время работы на себя в минутах
-    ValvePeriod = 7, // период срабатывания клапана
-    DeltaTemperature = 8, // дельта залета температуры колонны
-    DecreasePickingTemperature = 9, // температура снижения отбора
+    ValvePickingSpeed = 4, // скорость отбора открытого клапана в мл/час
+    HimselfWorkingTime = 5, // время работы на себя в минутах
+    ValvePeriod = 6, // период срабатывания клапана в мс
+    DeltaTemperature = 7, // дельта залета температуры колонны в десятых долях градуса
+    DecreasePickingTemperature = 8, // температура снижения отбора в градусах
+    CoolingActivationTemperature = 9, // температура включения воды охлаждения в градусах
 } PreParameter;
 
 uint32_t getPreParameter(PreParameter parameter, esp_err_t *err);
