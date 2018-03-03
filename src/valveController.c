@@ -28,13 +28,12 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/gpio.h"
-#include "driver/ledc.h"
 #include "sdkconfig.h"
 #include "config/config.h"
 #include "valveController.h"
 
 static unsigned int valve_pwm_percents = 0;
-static unsigned int valve_cycle_period_ms = 5000;
+static unsigned int valve_cycle_period_ms = 0;
 
 xSemaphoreHandle pwmMutex()
 {
@@ -54,47 +53,25 @@ xSemaphoreHandle periodMutex()
     return period_mutex;
 }
 
-void configureValve(uint32_t gpio_port, uint32_t freq, ledc_mode_t speed, ledc_timer_t timer, ledc_channel_t channel)
+void configureValve(gpio_num_t gpio_port)
 {
-    ledc_timer_config_t timer_conf;
-    timer_conf.speed_mode = speed;
-    timer_conf.bit_num = LEDC_TIMER_10_BIT;
-    timer_conf.timer_num = timer;
-    timer_conf.freq_hz = freq;
-    ledc_timer_config(&timer_conf);
-
-    ledc_channel_config_t ledc_conf;
-    ledc_conf.gpio_num = gpio_port;
-    ledc_conf.speed_mode = speed;
-    ledc_conf.channel = channel;
-    ledc_conf.intr_type = LEDC_INTR_DISABLE;
-    ledc_conf.timer_sel = timer;
-    ledc_conf.duty = 0x0;
-    // 50%=0x3FFF, 100%=0x7FFF for 15 Bit
-    // 50%=0x01FF, 100%=0x03FF for 10 Bit
-    ledc_channel_config(&ledc_conf);
+    gpio_pad_select_gpio(gpio_port);
+    gpio_set_direction(gpio_port, GPIO_MODE_OUTPUT);
 }
 
-void openCloseValve(ledc_mode_t speed, ledc_channel_t channel, uint32_t high_duration, uint32_t low_duration)
+void openCloseValve(gpio_num_t gpio_port, uint32_t high_duration, uint32_t low_duration)
 {
     // open
-    ledc_set_duty(speed, channel, 0x03FF);//0x0352 85%
-    ledc_update_duty(speed, channel);
+    gpio_set_level(gpio_port, 1);
     vTaskDelay(high_duration / portTICK_PERIOD_MS);
     // close
-    ledc_set_duty(speed, channel, 0);
-    ledc_update_duty(speed, channel);
+    gpio_set_level(gpio_port, 0);
     vTaskDelay(low_duration / portTICK_PERIOD_MS);
 }
 
 void valveControllerTask(void* pvParameter)
 {
-    ledc_mode_t speed = LEDC_HIGH_SPEED_MODE;
-    ledc_channel_t channel = LEDC_CHANNEL_1;
-    ledc_timer_t timer = LEDC_TIMER_1;
-    uint32_t freq = 1000;
-
-    configureValve(VALVE_GPIO_PIN, freq, speed, timer, channel);
+    configureValve(VALVE_GPIO_PIN);
 
     for (;;) {
         if (getValvePWM() == 0) {
@@ -105,7 +82,7 @@ void valveControllerTask(void* pvParameter)
             float high_output_period = getValvePeriod() * getValvePWM() / 100;
             float low_output_period = getValvePeriod() - high_output_period;
             // perform valve action
-            openCloseValve(speed, channel, high_output_period, low_output_period);
+            openCloseValve(VALVE_GPIO_PIN, high_output_period, low_output_period);
             // reset pwm
             setValvePWM(0);
         }
