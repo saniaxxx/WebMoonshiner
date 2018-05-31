@@ -38,5 +38,5 @@ void app_main(void) {
   startCheckingTemperatures(TaskPriorityHight);
   startValveController(TaskPriorityHight);
   startBuzzerController(TaskPriorityHight);
-  startDebugTask(TaskPriorityHight);
+  //startDebugTask(TaskPriorityHight);
 }

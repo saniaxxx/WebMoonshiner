@@ -173,7 +173,7 @@ uint32_t getPreParameter(PreParameter parameter, esp_err_t *err) {
     case ESP_OK:
       break;
     case ESP_ERR_NVS_NOT_FOUND:
-      printf("The value is not initialized yet!\n");
+      //printf("The value is not initialized yet!\n");
       value = getDefaultValueForPreParameter(parameter);
       break;
     default:
